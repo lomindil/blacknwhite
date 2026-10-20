@@ -6,6 +6,7 @@ import { useCallback, useRef, useState } from 'react';
 import { FormError, ReportButton } from '@/components/actions';
 import { Markdown } from '@/components/markdown';
 import { Avatar } from '@/components/ui';
+import { IconLock } from '@/components/icons';
 import { call, errorMessage } from '@/lib/client-api';
 import { timeAgo } from '@/lib/format';
 import { getSocket, useRoom } from '@/lib/socket';
@@ -35,10 +36,10 @@ export function ThreadView({ thread, initial, meId, canModerate }: { thread: Thr
   });
 
   return (
-    <div className="mt-8">
-      <ol className="divide-y divide-line border-y border-line">
+    <div className="mt-6">
+      <ol className="card divide-y divide-line/70 p-0">
         {posts.map((p) => (
-          <li key={p.id} className="py-5">
+          <li key={p.id} className="px-5 py-5 sm:px-6">
             <Post post={p} meId={meId} canModerate={canModerate} onChange={reload} />
           </li>
         ))}
@@ -67,7 +68,7 @@ function Post({ post, meId, canModerate, onChange }: { post: PostItem; meId: str
   const [body, setBody] = useState('body' in post ? post.body : '');
 
   if (post.locked) {
-    return <div className="text-sm text-muted">🔒 A reply about chapter {post.chapterRef} — finish that chapter to read it.</div>;
+    return <div className="flex items-center gap-2 rounded-xl border border-dashed border-plum-200 bg-plum-50/50 px-3 py-2 text-sm text-plum-700"><IconLock size={15} /> A reply about chapter {post.chapterRef} — finish that chapter to read it.</div>;
   }
   if (post.hidden) {
     return <div className="text-sm text-muted">{post.reason === 'deleted' ? 'This post was removed.' : "Hidden — you've blocked this reader."}</div>;

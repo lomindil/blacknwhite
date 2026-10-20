@@ -27,7 +27,7 @@ export function OnboardingForm(props: { displayName: string; city: string | null
         setError(null);
         try {
           await call('/v1/me', { method: 'PATCH', body: { displayName, city, languages, genres, acceptTerms: true } });
-          router.push('/');
+          router.push('/home');
           router.refresh();
         } catch (err) {
           setError(errorMessage(err));

@@ -142,7 +142,6 @@ export function Invites({ clubId, initial }: { clubId: string; initial: InviteIn
 
   return (
     <div>
-      <p className="mb-4 text-sm text-muted">Share a link in your WhatsApp group. Anyone with the link can join, even if the club is private.</p>
       <div className="mb-4 flex flex-wrap gap-2">
         {[
           ['Create link', {}],

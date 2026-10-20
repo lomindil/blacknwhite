@@ -18,7 +18,7 @@ function Wave({ fill }: { fill: string }) {
   );
 }
 
-function Hero() {
+function Hero({ signedIn }: { signedIn: boolean }) {
   return (
     <section className="bleed relative -mt-8 overflow-hidden bg-gradient-to-b from-sage-100 via-sage-50 to-[#F6F8F3] sm:-mt-12">
       {/* Atmosphere */}
@@ -51,8 +51,8 @@ function Hero() {
           </h1>
           <p className="mt-7 max-w-xl animate-fade-up text-lg leading-relaxed text-muted [animation-delay:440ms]">{BRAND.description}</p>
           <div className="mt-8 flex animate-fade-up flex-wrap gap-3 [animation-delay:560ms]">
-            <Link href="/login" className="btn px-7 py-3 text-base">
-              Get started — it’s free <IconArrow size={18} />
+            <Link href={signedIn ? '/home' : '/login'} className="btn px-7 py-3 text-base">
+              {signedIn ? 'Go to your home' : 'Get started — it’s free'} <IconArrow size={18} />
             </Link>
             <Link href="/clubs" className="btn-ghost px-7 py-3 text-base">
               Explore clubs
@@ -189,10 +189,10 @@ const STEPS = [
   },
 ];
 
-export function Landing({ clubs, cities }: { clubs: ClubSummary[]; cities: { city: string; name: string; clubs: number }[] }) {
+export function Landing({ clubs, cities, signedIn = false }: { clubs: ClubSummary[]; cities: { city: string; name: string; clubs: number }[]; signedIn?: boolean }) {
   return (
     <div className="-mb-8 sm:-mb-12">
-      <Hero />
+      <Hero signedIn={signedIn} />
       <Places />
 
       {/* Features */}

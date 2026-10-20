@@ -11,7 +11,7 @@ export function Nav({ me }: { me: Me | null }) {
         <Link href="/" aria-label="Home">
           <Logo />
         </Link>
-        <NavLinks className="hidden md:flex" />
+        <NavLinks className="hidden md:flex" signedIn={Boolean(me)} />
         <div className="ml-auto flex items-center gap-4">
           {me ? (
             <>
@@ -32,7 +32,7 @@ export function Nav({ me }: { me: Me | null }) {
           )}
         </div>
       </div>
-      <NavLinks className="flex overflow-x-auto border-t border-line/80 px-4 md:hidden" mobile />
+      <NavLinks className="flex overflow-x-auto border-t border-line/80 px-4 md:hidden" mobile signedIn={Boolean(me)} />
     </header>
   );
 }

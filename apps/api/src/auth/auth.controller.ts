@@ -89,7 +89,7 @@ export class AuthController {
       const profile = await this.google.handleCallback(query.code, query.state);
       const user = await this.accounts.findOrCreate('google', profile.sub, profile);
       this.sessions.setCookies(res, await this.sessions.create(user.id));
-      res.redirect(`${web}${user.onboardedAt ? '/' : '/onboarding'}`);
+      res.redirect(`${web}${user.onboardedAt ? '/home' : '/onboarding'}`);
     } catch (e) {
       const code = e instanceof AppError ? e.code.toLowerCase() : 'signin_failed';
       if (!(e instanceof AppError)) this.logger.error(e instanceof Error ? e.stack : String(e));

@@ -25,7 +25,7 @@ export function StartConversation({ recipientId }: { recipientId: string }) {
         }
       }}
     >
-      <textarea className="input" rows={5} value={body} onChange={(e) => setBody(e.target.value)} required placeholder="Say hello" aria-label="Message" />
+      <textarea className="input bg-surface shadow-card" rows={4} value={body} onChange={(e) => setBody(e.target.value)} required placeholder="Say hello" aria-label="Message" />
       <p className="mt-1 text-xs text-muted">Links and images aren't allowed in a first message.</p>
       <FormError error={error} />
       <button className="btn mt-3" disabled={busy}>Send</button>

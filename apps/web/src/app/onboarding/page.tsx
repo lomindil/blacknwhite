@@ -7,7 +7,7 @@ export const metadata = { title: 'Welcome' };
 export default async function OnboardingPage() {
   const me = await getMe();
   if (!me) redirect('/login');
-  if (me.onboarded) redirect('/');
+  if (me.onboarded) redirect('/home');
   return (
     <div className="mx-auto max-w-2xl">
       <div className="eyebrow mb-2">Welcome</div>

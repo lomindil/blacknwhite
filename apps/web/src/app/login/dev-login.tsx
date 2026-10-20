@@ -27,7 +27,7 @@ export function DevLoginForm({ next }: { next?: string }) {
           });
           const body = await res.json();
           if (!res.ok) throw Object.assign(new Error(body.message), body);
-          router.push(body.onboarded ? (next?.startsWith('/') ? next : '/') : '/onboarding');
+          router.push(body.onboarded ? (next?.startsWith('/') ? next : '/home') : '/onboarding');
           router.refresh();
         } catch (err) {
           setError(err instanceof Error ? err.message : errorMessage(err));

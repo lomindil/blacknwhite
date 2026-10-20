@@ -9,6 +9,7 @@ import { BookCover } from '@/components/ui';
 import { call, errorMessage } from '@/lib/client-api';
 import { formatDateTime } from '@/lib/format';
 import { BookPicker } from '@/components/book-picker';
+import { IconPlus } from '@/components/icons';
 
 export function PollCard({ poll, canClose, canSetBook, clubSlug }: { poll: PollInfo; canClose: boolean; canSetBook: boolean; clubSlug: string }) {
   const router = useRouter();
@@ -20,10 +21,8 @@ export function PollCard({ poll, canClose, canSetBook, clubSlug }: { poll: PollI
 
   return (
     <div className="card">
-      <div className="mb-1 flex items-start justify-between gap-3">
-        <h2 className="h3">{p.question}</h2>
-        <span className="chip shrink-0">{p.closed ? 'Closed' : p.closesAt ? `Closes ${formatDateTime(p.closesAt)}` : 'Open'}</span>
-      </div>
+      <span className={`chip mb-2 ${p.closed ? '' : 'border-ochre-200 bg-ochre-50 text-ochre-700'}`}>{p.closed ? 'Closed' : p.closesAt ? `Closes ${formatDateTime(p.closesAt)}` : 'Open'}</span>
+      <h2 className="h3 mb-1">{p.question}</h2>
       <div className="mb-4 text-xs text-muted">Asked by {p.createdBy.displayName} · {p.totalVotes} vote{p.totalVotes === 1 ? '' : 's'}</div>
       <ul className="space-y-2">
         {p.options.map((o) => {
@@ -75,7 +74,26 @@ export function PollCard({ poll, canClose, canSetBook, clubSlug }: { poll: PollI
   );
 }
 
-export function NewPollForm({ clubId }: { clubId: string }) {
+/** Collapsed to a button until needed. */
+export function NewPollPanel({ clubId }: { clubId: string }) {
+  const [open, setOpen] = useState(false);
+  if (open) return <NewPollForm clubId={clubId} onClose={() => setOpen(false)} />;
+  return (
+    <button
+      type="button"
+      onClick={() => setOpen(true)}
+      className="group flex w-full items-center gap-3 rounded-2xl border border-dashed border-ochre-300 bg-ochre-50/60 px-5 py-4 text-left transition hover:border-ochre-600 hover:bg-ochre-50"
+    >
+      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ochre-600 text-white transition group-hover:scale-105"><IconPlus size={18} /></span>
+      <span>
+        <span className="block font-medium">New poll</span>
+        <span className="block text-sm text-muted">Pick the next book, a meeting time, or anything else</span>
+      </span>
+    </button>
+  );
+}
+
+export function NewPollForm({ clubId, onClose }: { clubId: string; onClose?: () => void }) {
   const router = useRouter();
   const [kind, setKind] = useState<'book' | 'time' | 'general'>('book');
   const [question, setQuestion] = useState('What should we read next?');
@@ -87,7 +105,7 @@ export function NewPollForm({ clubId }: { clubId: string }) {
 
   return (
     <form
-      className="card space-y-4"
+      className="card animate-pop-in space-y-4"
       onSubmit={async (e) => {
         e.preventDefault();
         setBusy(true);
@@ -104,6 +122,7 @@ export function NewPollForm({ clubId }: { clubId: string }) {
           setBooks([]);
           setOptions(['', '']);
           router.refresh();
+          onClose?.();
         } catch (err) {
           setError(errorMessage(err));
         } finally {
@@ -166,7 +185,10 @@ export function NewPollForm({ clubId }: { clubId: string }) {
         <input id="closes" type="datetime-local" className="input" value={closesAt} onChange={(e) => setClosesAt(e.target.value)} />
       </div>
       <FormError error={error} />
-      <button className="btn w-full" disabled={busy}>Create poll</button>
+      <div className="flex gap-2">
+        <button className="btn" disabled={busy}>Create poll</button>
+        {onClose && <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>}
+      </div>
     </form>
   );
 }

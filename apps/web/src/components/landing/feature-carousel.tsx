@@ -204,7 +204,7 @@ export function FeatureCarousel() {
       onBlurCapture={() => setFocused(false)}
     >
       {/* Tabs */}
-      <div ref={tabRow} className="relative -mx-4 mb-8 overflow-x-auto px-4 pb-2 [scrollbar-width:none]">
+      <div ref={tabRow} className="relative -mx-4 mb-8 overflow-x-auto px-4 pb-2 pt-1 [scrollbar-width:none]">
         <div role="tablist" aria-label="Features" className="flex w-max gap-2">
           {SLIDES.map((s, i) => {
             const active = i === index;
@@ -253,7 +253,7 @@ export function FeatureCarousel() {
 
       {/* Slides */}
       <div
-        className="overflow-hidden"
+        className="overflow-x-clip"
         onTouchStart={(e) => {
           touchX.current = e.touches[0].clientX;
         }}
@@ -302,9 +302,9 @@ export function FeatureCarousel() {
                       {s.cta.label} →
                     </Link>
                   </div>
-                  <div className="relative pb-32 sm:pb-28 lg:pb-28">
+                  <div className="relative pb-32 pr-3 pt-3 sm:pb-28">
                     {/* accent block behind the photo keeps each feature's colour */}
-                    <div className={`absolute -right-3 -top-3 h-3/4 w-3/4 rounded-[2rem] ${t.panel}`} aria-hidden>
+                    <div className={`absolute right-0 top-0 h-3/4 w-3/4 rounded-[2rem] ${t.panel}`} aria-hidden>
                       <div className="dots absolute inset-0 rounded-[2rem]" />
                     </div>
                     <div className="relative ml-auto aspect-[4/3] w-full overflow-hidden rounded-[2rem] shadow-lift lg:w-[90%]">
@@ -318,7 +318,7 @@ export function FeatureCarousel() {
                       <div className="absolute inset-0 bg-gradient-to-tr from-black/25 via-transparent to-transparent" aria-hidden />
                     </div>
                     <div
-                      className={`absolute bottom-0 left-0 w-[88%] origin-bottom-left scale-[0.84] transition-all delay-200 duration-700 sm:w-[60%] sm:scale-90 lg:-left-10 ${
+                      className={`absolute bottom-0 left-0 w-[88%] origin-bottom-left scale-[0.84] transition-all delay-200 duration-700 sm:w-[60%] sm:scale-90 ${
                         active ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'
                       }`}
                     >

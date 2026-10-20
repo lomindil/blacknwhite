@@ -13,6 +13,12 @@ Format:
 
 ---
 
+## 2026-10-20 — Club side panel, two-pane messages, landing for everyone
+
+**Docs:** — (UI only)
+**Change:** Club pages use a sticky side panel (club identity, current book with progress, section links, organizer quick actions) instead of top tabs; Overview becomes a dashboard (reading-now timeline, meetups, latest discussion, open poll, about, past reads); new-thread and new-poll forms collapse until needed; members show as a card grid; Manage uses card sections. Messages is now a two-pane inbox (conversation list + chat) with a contrasted message area, day separators and a composer bar. The landing page at `/` is shown to everyone; the signed-in feed moved to `/home` (header gets a Home link; sign-in and onboarding land on `/home`). Fixed the feature carousel clipping its tabs and overlay cards.
+**Why:** Make better use of wide screens, make chat readable, and let signed-in readers reach the landing page.
+
 ## 2026-10-20 — Visual redesign and new landing page
 
 **Docs:** — (UI only)

@@ -1,6 +1,7 @@
 import type { DmMessageItem, Page, UserSummary } from '@bnw/shared';
 import Link from 'next/link';
 import { ReportButton } from '@/components/actions';
+import { IconChevron } from '@/components/icons';
 import { Avatar } from '@/components/ui';
 import { apiOrNotFound, requireMe } from '@/lib/server-api';
 import { Chat } from './chat';
@@ -13,12 +14,17 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
   const conv = await apiOrNotFound<{ id: string; other: UserSummary; readOnly: boolean }>(`/v1/dms/${id}`);
   const messages = await apiOrNotFound<Page<DmMessageItem>>(`/v1/dms/${id}/messages?limit=50`);
   return (
-    <div className="mx-auto max-w-2xl">
-      <div className="mb-4 flex items-center justify-between gap-3 border-b border-line pb-4">
-        <Link href="/messages" className="text-sm text-muted hover:text-ink">← Messages</Link>
-        <Link href={`/readers/${conv.other.id}`} className="flex items-center gap-2 hover:underline">
-          <Avatar user={conv.other} size={32} />
-          <span className="font-medium">{conv.other.displayName}</span>
+    <div className="flex h-full flex-col">
+      <div className="flex items-center gap-3 border-b border-line bg-surface px-4 py-3 sm:px-5">
+        <Link href="/messages" className="-ml-1 rounded-full p-1.5 text-muted hover:bg-soft lg:hidden" aria-label="Back to messages">
+          <IconChevron dir="left" size={20} />
+        </Link>
+        <Link href={`/readers/${conv.other.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+          <Avatar user={conv.other} size={38} />
+          <span className="min-w-0">
+            <span className="block truncate font-medium hover:underline">{conv.other.displayName}</span>
+            <span className="block text-xs text-muted">{conv.readOnly ? 'Read-only conversation' : 'Shares a club with you'}</span>
+          </span>
         </Link>
         <ReportButton targetType="user" targetId={conv.other.id} label="Report" />
       </div>
