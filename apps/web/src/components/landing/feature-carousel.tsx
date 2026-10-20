@@ -31,6 +31,8 @@ const TONES: Record<Tone, { panel: string; icon: string; tab: string; bar: strin
 
 interface Slide {
   id: string;
+  photo: string;
+  photoAlt: string;
   tab: string;
   Icon: ComponentType<{ size?: number }>;
   tone: Tone;
@@ -46,6 +48,8 @@ interface Slide {
 const SLIDES: Slide[] = [
   {
     id: 'clubs',
+    photo: '/images/landing/feat-clubs.jpg',
+    photoAlt: 'Members of a book club chatting in a cosy library lounge',
     tab: 'Clubs',
     Icon: IconUsers,
     tone: 'sage',
@@ -58,6 +62,8 @@ const SLIDES: Slide[] = [
   },
   {
     id: 'vote',
+    photo: '/images/landing/feat-vote.jpg',
+    photoAlt: 'Hands holding open books around a table',
     tab: 'Vote on books',
     Icon: IconVote,
     tone: 'ochre',
@@ -70,6 +76,8 @@ const SLIDES: Slide[] = [
   },
   {
     id: 'track',
+    photo: '/images/landing/feat-track.jpg',
+    photoAlt: 'A young reader in glasses reading a book',
     tab: 'Track reading',
     Icon: IconProgress,
     tone: 'sky',
@@ -82,6 +90,8 @@ const SLIDES: Slide[] = [
   },
   {
     id: 'chat',
+    photo: '/images/landing/feat-chat.jpg',
+    photoAlt: 'Two friends reading and chatting on the floor',
     tab: 'Chat',
     Icon: IconChat,
     tone: 'plum',
@@ -94,6 +104,8 @@ const SLIDES: Slide[] = [
   },
   {
     id: 'meet',
+    photo: '/images/landing/feat-meet.jpg',
+    photoAlt: 'Two friends discussing a book in a library',
     tab: 'Meetups',
     Icon: IconCalendar,
     tone: 'clay',
@@ -106,6 +118,8 @@ const SLIDES: Slide[] = [
   },
   {
     id: 'local',
+    photo: '/images/landing/feat-local.jpg',
+    photoAlt: 'A street bookseller with books laid out on the pavement',
     tab: 'Your city & language',
     Icon: IconLanguage,
     tone: 'rose',
@@ -118,6 +132,8 @@ const SLIDES: Slide[] = [
   },
   {
     id: 'shelves',
+    photo: '/images/landing/feat-shelves.jpg',
+    photoAlt: 'Inside a bright bookstore with bestseller shelves',
     tab: 'Bring your shelves',
     Icon: IconImport,
     tone: 'sage',
@@ -130,6 +146,8 @@ const SLIDES: Slide[] = [
   },
   {
     id: 'safety',
+    photo: '/images/landing/feat-safety.jpg',
+    photoAlt: 'A woman smiling while reading on her sofa at home',
     tab: 'Safe & private',
     Icon: IconShield,
     tone: 'plum',
@@ -284,9 +302,26 @@ export function FeatureCarousel() {
                       {s.cta.label} →
                     </Link>
                   </div>
-                  <div className={`relative overflow-hidden rounded-[2rem] p-6 sm:p-10 ${t.panel}`}>
-                    <div className="dots absolute inset-0 opacity-70" aria-hidden />
-                    <div className="relative mx-auto max-w-md">
+                  <div className="relative pb-32 sm:pb-28 lg:pb-28">
+                    {/* accent block behind the photo keeps each feature's colour */}
+                    <div className={`absolute -right-3 -top-3 h-3/4 w-3/4 rounded-[2rem] ${t.panel}`} aria-hidden>
+                      <div className="dots absolute inset-0 rounded-[2rem]" />
+                    </div>
+                    <div className="relative ml-auto aspect-[4/3] w-full overflow-hidden rounded-[2rem] shadow-lift lg:w-[90%]">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={s.photo}
+                        alt={s.photoAlt}
+                        loading={i === 0 ? 'eager' : 'lazy'}
+                        className={`h-full w-full object-cover transition-transform duration-[1600ms] ease-out ${active ? 'scale-100' : 'scale-110'}`}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-tr from-black/25 via-transparent to-transparent" aria-hidden />
+                    </div>
+                    <div
+                      className={`absolute bottom-0 left-0 w-[88%] origin-bottom-left scale-[0.84] transition-all delay-200 duration-700 sm:w-[60%] sm:scale-90 lg:-left-10 ${
+                        active ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'
+                      }`}
+                    >
                       <s.Mock active={active && inView} />
                     </div>
                   </div>

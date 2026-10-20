@@ -1,6 +1,6 @@
 import type { ClubSummary } from '@bnw/shared';
 import Link from 'next/link';
-import { IconArrow, IconCalendar, IconCheck, IconLock, IconPin, IconVote } from '@/components/icons';
+import { IconArrow, IconCalendar, IconCheck, IconPin, IconVote } from '@/components/icons';
 import { Reveal } from '@/components/reveal';
 import { BookCover, ClubCard } from '@/components/ui';
 import { BRAND } from '@/lib/brand';
@@ -74,73 +74,97 @@ function Hero() {
   );
 }
 
-/** A floating composition of the product's core moments: club, vote, meetup, spoiler gate. */
+/** Real readers first, with small product moments floating around them. */
 function HeroCollage() {
   return (
-    <div className="relative mx-auto h-[440px] w-full max-w-[480px] animate-pop-in [animation-delay:300ms] sm:h-[500px]" aria-hidden>
-      {/* fanned covers */}
-      <div className="absolute right-10 top-[16%] rotate-[8deg] animate-float-slow [animation-delay:-2s]">
-        <BookCover book={{ title: 'Pather Panchali', authors: ['Bibhutibhushan'], coverUrl: null }} />
+    <div className="relative mx-auto h-[460px] w-full max-w-[520px] animate-pop-in [animation-delay:250ms] sm:h-[540px]">
+      {/* main photo */}
+      <div className="absolute right-0 top-0 h-[82%] w-[80%] overflow-hidden rounded-[2rem] shadow-lift">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/images/landing/hero-cafe.jpg" alt="Friends talking over books and snacks at a café table" className="h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" aria-hidden />
       </div>
-      <div className="absolute left-8 top-[20%] -rotate-[10deg] animate-float-slow">
-        <BookCover book={{ title: 'Ponniyin Selvan', authors: ['Kalki'], coverUrl: null }} />
+      {/* inset photo */}
+      <div className="absolute bottom-[4%] left-0 h-[42%] w-[36%] -rotate-[5deg] overflow-hidden rounded-3xl border-[5px] border-white shadow-lift transition-transform duration-500 hover:rotate-0">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/images/landing/hero-reader.jpg" alt="A reader in a red kurta reading in a cane chair" className="h-full w-full object-cover" />
       </div>
 
-      {/* main club card */}
-      <div className="absolute left-1/2 top-[47%] w-[300px] -translate-x-1/2 -translate-y-1/2 sm:w-[340px]">
-        <div className="animate-float rounded-3xl border border-white bg-white/95 p-5 shadow-lift backdrop-blur">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <div className="font-serif text-lg leading-tight">Sunday Fiction Circle</div>
-              <div className="text-xs text-muted">Kochi · 24 members</div>
-            </div>
-            <span className="rounded-full bg-sage-50 px-2.5 py-1 text-[11px] font-medium text-sage-700">Joined</span>
-          </div>
-          <div className="flex gap-3">
+      <div aria-hidden>
+        {/* this week's reading — compact */}
+        <div className="absolute bottom-0 right-[-2%] w-[58%] animate-float sm:right-[-4%]">
+          <div className="flex items-center gap-3 rounded-2xl border border-white bg-white/95 p-3 shadow-lift backdrop-blur">
             <BookCover book={{ title: 'The God of Small Things', authors: ['Arundhati Roy'], coverUrl: null }} size="sm" />
-            <div className="flex-1">
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-sky-700">This week</div>
-              <div className="text-sm">Chapters 9–12</div>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-sky-50">
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-[13px] font-medium">Sunday Fiction Circle</div>
+              <div className="text-[11px] text-muted">This week · chapters 9–12</div>
+              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-sky-50">
                 <div className="h-full w-[62%] rounded-full bg-sky-600" />
               </div>
-              <div className="mt-1 text-[11px] text-muted">You’re on chapter 10</div>
+              <div className="mt-1.5"><Faces extra="+20" /></div>
             </div>
           </div>
-          <div className="mt-4 border-t border-line/70 pt-3">
-            <Faces extra="+20 reading along" />
+        </div>
+        {/* chips */}
+        <div className="absolute left-[4%] top-[8%] animate-float [animation-delay:-2.5s]">
+          <div className="rounded-2xl rounded-bl-md bg-sage-700 px-3.5 py-2 text-xs text-white shadow-lift">That ending of chapter 10 😮</div>
+        </div>
+        <div className="absolute left-[2%] top-[42%] animate-float [animation-delay:-1s]">
+          <div className="flex items-center gap-2.5 rounded-2xl border border-white bg-white/95 px-3.5 py-2.5 shadow-lift">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-ochre-100 text-ochre-700"><IconVote size={16} /></span>
+            <div className="text-xs">
+              <div className="font-medium">Next read: Tomb of Sand</div>
+              <div className="text-muted">won with 12 votes</div>
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* floating chips, placed around the card so they never cover it */}
-      <div className="absolute left-0 top-[4%] animate-float [animation-delay:-2.5s] sm:-left-2">
-        <div className="rounded-2xl rounded-bl-md bg-sage-700 px-3.5 py-2 text-xs text-white shadow-lift">That ending of chapter 10 😮</div>
-      </div>
-      <div className="absolute right-0 top-[9%] animate-float [animation-delay:-4.5s]">
-        <div className="flex items-center gap-2 rounded-full border border-white bg-white/95 px-3 py-1.5 text-[11px] text-plum-700 shadow-lift">
-          <IconLock size={13} /> Week 4 unlocks at ch. 12
-        </div>
-      </div>
-      <div className="absolute bottom-[9%] left-0 animate-float [animation-delay:-1s] sm:-left-4">
-        <div className="flex items-center gap-2.5 rounded-2xl border border-white bg-white/95 px-3.5 py-2.5 shadow-lift">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-ochre-100 text-ochre-700"><IconVote size={16} /></span>
-          <div className="text-xs">
-            <div className="font-medium">Next read: Tomb of Sand</div>
-            <div className="text-muted">won with 12 votes</div>
-          </div>
-        </div>
-      </div>
-      <div className="absolute bottom-0 right-0 animate-float [animation-delay:-3s] sm:-right-4">
-        <div className="flex items-center gap-2.5 rounded-2xl border border-white bg-white/95 px-3.5 py-2.5 shadow-lift">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-clay-100 text-clay-700"><IconCalendar size={16} /></span>
-          <div className="text-xs">
-            <div className="font-medium">Meetup · Sat, 5 pm</div>
-            <div className="text-muted">8 going · reminder sent</div>
+        <div className="absolute right-[-2%] top-[6%] animate-float [animation-delay:-3.5s] sm:right-[-5%]">
+          <div className="flex items-center gap-2.5 rounded-2xl border border-white bg-white/95 px-3.5 py-2.5 shadow-lift">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-clay-100 text-clay-700"><IconCalendar size={16} /></span>
+            <div className="text-xs">
+              <div className="font-medium">Meetup · Sat, 5 pm</div>
+              <div className="text-muted">8 going</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+const PLACES = [
+  { img: 'place-livingroom', title: 'Living rooms', note: 'Friends who read together', alt: 'Three friends laughing over a book on a sofa', span: 'col-span-2 row-span-2 md:col-span-1' },
+  { img: 'place-park', title: 'Parks and campuses', note: 'Sunday reads in the open', alt: 'Two friends reading together outdoors', span: 'col-span-2 md:col-span-2' },
+  { img: 'place-bookstore', title: 'Bookstores', note: 'Your local indie, between the shelves', alt: 'A reader browsing tall shelves in a crowded bookstore', span: 'col-span-1 row-span-2 md:col-span-1' },
+  { img: 'place-library', title: 'Libraries', note: 'Community spaces and reading rooms', alt: 'People reading in a cosy community library', span: 'col-span-1 md:col-span-1' },
+  { img: 'place-steps', title: 'Anywhere, really', note: 'Online, offline, or both', alt: 'A group of friends reading together on wooden steps', span: 'col-span-1 md:col-span-1' },
+];
+
+/** Photo grid: book clubs are people and places first. */
+function Places() {
+  return (
+    <section className="bleed bg-surface pb-20 pt-6 sm:pb-24">
+      <div className="mx-auto max-w-page px-4">
+        <Reveal className="mx-auto mb-12 max-w-2xl text-center">
+          <div className="eyebrow mb-3">Book clubs happen everywhere</div>
+          <h2 className="font-serif text-4xl font-medium tracking-tight sm:text-5xl">Wherever readers gather, there’s a club</h2>
+          <p className="mt-4 text-lg text-muted">In living rooms and cafés, parks and bookstores — in person or online. We give every club a home.</p>
+        </Reveal>
+        <div className="grid auto-rows-[160px] grid-cols-2 gap-3 sm:auto-rows-[200px] md:grid-cols-4 md:gap-4">
+          {PLACES.map((p, i) => (
+            <Reveal key={p.img} delay={i * 90} className={`group relative overflow-hidden rounded-3xl ${p.span}`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`/images/landing/${p.img}.jpg`} alt={p.alt} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/5 to-transparent" aria-hidden />
+              <div className="absolute inset-x-0 bottom-0 p-4 text-white sm:p-5">
+                <div className="font-serif text-lg font-medium leading-tight sm:text-xl">{p.title}</div>
+                <div className="mt-0.5 text-xs text-white/85 transition-all duration-500 sm:text-sm sm:opacity-0 sm:group-hover:opacity-100">{p.note}</div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -169,9 +193,10 @@ export function Landing({ clubs, cities }: { clubs: ClubSummary[]; cities: { cit
   return (
     <div className="-mb-8 sm:-mb-12">
       <Hero />
+      <Places />
 
       {/* Features */}
-      <section className="bleed bg-surface py-20 sm:py-28">
+      <section className="bleed border-t border-line/70 bg-paper py-20 sm:py-28">
         <div className="mx-auto max-w-page px-4">
           <Reveal className="mx-auto mb-12 max-w-2xl text-center">
             <div className="eyebrow mb-3">Everything your club needs</div>
@@ -185,7 +210,7 @@ export function Landing({ clubs, cities }: { clubs: ClubSummary[]; cities: { cit
       </section>
 
       {/* How it works */}
-      <section className="bleed border-y border-line/70 bg-paper py-20 sm:py-24">
+      <section className="bleed border-y border-line/70 bg-surface py-20 sm:py-24">
         <div className="mx-auto max-w-page px-4">
           <Reveal className="mb-14 text-center">
             <div className="eyebrow mb-3">How it works</div>
@@ -195,7 +220,7 @@ export function Landing({ clubs, cities }: { clubs: ClubSummary[]; cities: { cit
             <div className="absolute left-[16%] right-[16%] top-7 hidden border-t-2 border-dashed border-line md:block" aria-hidden />
             {STEPS.map((s, i) => (
               <Reveal as="li" key={s.n} delay={i * 150} className="relative text-center">
-                <span className={`relative mx-auto flex h-14 w-14 items-center justify-center rounded-full font-serif text-2xl ring-8 ring-paper ${s.tone}`}>{s.n}</span>
+                <span className={`relative mx-auto flex h-14 w-14 items-center justify-center rounded-full font-serif text-2xl ring-8 ring-surface ${s.tone}`}>{s.n}</span>
                 <h3 className="mt-5 font-serif text-xl font-medium">{s.title}</h3>
                 <p className="mx-auto mt-2 max-w-xs text-muted">{s.body}</p>
               </Reveal>
@@ -206,7 +231,7 @@ export function Landing({ clubs, cities }: { clubs: ClubSummary[]; cities: { cit
 
       {/* Clubs */}
       {clubs.length > 0 && (
-        <section className="bleed bg-surface py-20 sm:py-24">
+        <section className="bleed bg-paper py-20 sm:py-24">
           <div className="mx-auto max-w-page px-4">
             <Reveal className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
               <div>
@@ -230,7 +255,7 @@ export function Landing({ clubs, cities }: { clubs: ClubSummary[]; cities: { cit
 
       {/* Cities */}
       {cities.length > 0 && (
-        <section className="bleed bg-paper py-20">
+        <section className="bleed border-t border-line/70 bg-surface py-20">
           <div className="mx-auto max-w-page px-4 text-center">
             <Reveal>
               <div className="eyebrow mb-3">Near you</div>
@@ -258,28 +283,48 @@ export function Landing({ clubs, cities }: { clubs: ClubSummary[]; cities: { cit
       )}
 
       {/* Readers and organizers */}
-      <section className="bleed bg-paper pb-24 pt-4">
-        <div className="mx-auto grid max-w-page gap-5 px-4 md:grid-cols-2">
-          <Reveal className="relative h-full overflow-hidden rounded-[2rem] bg-sage-100 p-8 sm:p-10">
-            <div className="dots absolute inset-0 opacity-60" aria-hidden />
-            <div className="relative">
-              <div className="eyebrow mb-3">For readers</div>
-              <h3 className="font-serif text-3xl font-medium leading-tight">Find your people. Never get spoiled.</h3>
-              <p className="mt-3 max-w-md text-ink/75">Join clubs near you or online, keep your shelves, and talk about every chapter with people reading alongside you. Always free.</p>
-              <Link href="/login" className="btn mt-7">Join for free <IconArrow size={16} /></Link>
-            </div>
-          </Reveal>
-          <Reveal delay={120} className="relative h-full overflow-hidden rounded-[2rem] bg-clay-100 p-8 sm:p-10">
-            <div className="dots absolute inset-0 opacity-60" aria-hidden />
-            <div className="relative">
-              <div className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-clay-700">For organizers</div>
-              <h3 className="font-serif text-3xl font-medium leading-tight">Run your club without the chasing.</h3>
-              <p className="mt-3 max-w-md text-ink/75">Schedules, polls, RSVPs and reminders in one place. Members get nudges on WhatsApp, so you don’t have to send them.</p>
-              <Link href="/clubs/new" className="btn mt-7 bg-clay-700 hover:bg-clay-800">
-                Start a club <IconArrow size={16} />
-              </Link>
-            </div>
-          </Reveal>
+      <section className="bleed bg-surface pb-24 pt-4">
+        <div className="mx-auto grid max-w-page gap-5 px-4 lg:grid-cols-2">
+          {[
+            {
+              img: 'card-readers',
+              alt: 'Two friends reading by a sunny window',
+              bg: 'bg-sage-100',
+              eyebrow: 'For readers',
+              eyebrowClass: 'text-sage-700',
+              title: 'Find your people. Never get spoiled.',
+              body: 'Join clubs near you or online, keep your shelves, and talk about every chapter with people reading alongside you. Always free.',
+              cta: { href: '/login', label: 'Join for free', cls: 'btn' },
+            },
+            {
+              img: 'card-organizers',
+              alt: 'Club members reading and taking notes at a picnic table',
+              bg: 'bg-clay-100',
+              eyebrow: 'For organizers',
+              eyebrowClass: 'text-clay-700',
+              title: 'Run your club without the chasing.',
+              body: 'Schedules, polls, RSVPs and reminders in one place. Members get nudges on WhatsApp, so you don’t have to send them.',
+              cta: { href: '/clubs/new', label: 'Start a club', cls: 'btn bg-clay-700 hover:bg-clay-800' },
+            },
+          ].map((c, i) => (
+            <Reveal key={c.img} delay={i * 120} className={`group relative grid h-full overflow-hidden rounded-[2rem] sm:grid-cols-[1.15fr_1fr] ${c.bg}`}>
+              <div className="relative p-8 sm:p-10">
+                <div className="dots absolute inset-0 opacity-60" aria-hidden />
+                <div className="relative">
+                  <div className={`mb-3 text-xs font-semibold uppercase tracking-[0.16em] ${c.eyebrowClass}`}>{c.eyebrow}</div>
+                  <h3 className="font-serif text-3xl font-medium leading-tight">{c.title}</h3>
+                  <p className="mt-3 text-ink/75">{c.body}</p>
+                  <Link href={c.cta.href} className={`${c.cta.cls} mt-7`}>
+                    {c.cta.label} <IconArrow size={16} />
+                  </Link>
+                </div>
+              </div>
+              <div className="relative min-h-[220px] overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={`/images/landing/${c.img}.jpg`} alt={c.alt} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              </div>
+            </Reveal>
+          ))}
         </div>
       </section>
     </div>
