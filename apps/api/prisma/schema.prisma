@@ -37,6 +37,8 @@ model User {
   posts            Post[]
   dmParticipations DmParticipant[]
   dmMessages       DmMessage[]
+  media            Media[]
+  reactions        PostReaction[]
   rsvps            EventRsvp[]
   eventsCreated    Event[]
   notifications    Notification[]
@@ -393,6 +395,8 @@ model Thread {
   chapterGate  Int       @default(0) @map("chapter_gate")
   authorId     String?   @map("author_id") @db.Uuid
   isSystem     Boolean   @default(false) @map("is_system")
+  /// The club's message board: one per club, a general feed of posts and comments.
+  isBoard      Boolean   @default(false) @map("is_board")
   postCount    Int       @default(0) @map("post_count")
   lastPostAt   DateTime  @default(now()) @map("last_post_at")
   createdAt    DateTime  @default(now()) @map("created_at")
@@ -406,6 +410,7 @@ model Thread {
 
   @@unique([clubBookId, scheduleWeek])
   @@index([clubId, lastPostAt])
+  @@index([clubId, isBoard])
   @@map("threads")
 }
 
@@ -413,17 +418,31 @@ model Post {
   id         String    @id @default(uuid(7)) @db.Uuid
   threadId   String    @map("thread_id") @db.Uuid
   authorId   String    @map("author_id") @db.Uuid
+  /// Board posts have a title; thread posts and comments don't.
+  title      String?
   body       String
   /// Replies inherit the thread's gate; a higher chapterRef hides the reply until that chapter.
   chapterRef Int?      @map("chapter_ref")
+  /// Set on comments: the post or comment being replied to.
+  parentId   String?   @map("parent_id") @db.Uuid
+  /// Set on comments: the top-level post of the conversation, so a whole comment tree loads in one query.
+  rootId     String?   @map("root_id") @db.Uuid
   createdAt  DateTime  @default(now()) @map("created_at")
   editedAt   DateTime? @map("edited_at")
   deletedAt  DateTime? @map("deleted_at")
 
-  thread Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  author User   @relation(fields: [authorId], references: [id])
+  thread  Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  author  User   @relation(fields: [authorId], references: [id])
+  parent  Post?   @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies     Post[]         @relation("Replies")
+  root        Post?          @relation("Root", fields: [rootId], references: [id], onDelete: Cascade)
+  descendants Post[]         @relation("Root")
+  media       Media[]
+  reactions   PostReaction[]
 
   @@index([threadId, id])
+  @@index([parentId])
+  @@index([rootId, id])
   @@map("posts")
 }
 
@@ -659,4 +678,47 @@ model ImportJob {
 
   @@index([userId, createdAt])
   @@map("import_jobs")
+}
+
+// ---------- Media ----------
+
+/// An uploaded photo. Uploaded first (postId null), then attached to a post; unattached ones are cleaned up daily.
+/// Files are re-encoded on upload, which strips EXIF (including GPS location).
+model Media {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  ownerId   String   @map("owner_id") @db.Uuid
+  postId    String?  @map("post_id") @db.Uuid
+  key       String   @unique
+  width     Int
+  height    Int
+  bytes     Int
+  position  Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  owner User  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  post  Post? @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId, position])
+  @@index([ownerId, createdAt])
+  @@map("media")
+}
+
+enum ReactionKind {
+  like
+  love
+}
+
+/// 👍 / ❤️ on a post or comment. One of each kind per person.
+model PostReaction {
+  postId    String       @map("post_id") @db.Uuid
+  userId    String       @map("user_id") @db.Uuid
+  kind      ReactionKind
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([postId, userId, kind])
+  @@index([postId, kind])
+  @@map("post_reactions")
 }

@@ -319,3 +319,41 @@ export interface ReportItem {
   createdAt: string;
   context: { excerpt: string | null; author: UserSummary | null; url: string | null };
 }
+
+/** An uploaded photo (EXIF stripped, resized). `url` is relative to the site, e.g. /media/2026/10/….webp */
+export interface MediaInfo {
+  id: string;
+  url: string;
+  width: number;
+  height: number;
+}
+
+export type ReactionKind = 'like' | 'love';
+
+export interface Reactions {
+  like: number;
+  love: number;
+  mine: ReactionKind[];
+}
+
+/**
+ * A message-board post or comment. `body` is null when removed or from a blocked reader.
+ * In the feed `replies` is empty and `commentCount` says how many comments the post has;
+ * the post page returns the full comment tree in `replies`.
+ */
+export interface BoardEntry {
+  id: string;
+  parentId: string | null;
+  commentCount: number;
+  reactions: Reactions;
+  /** Posts have a title; comments don't. */
+  title: string | null;
+  body: string | null;
+  images: MediaInfo[];
+  hiddenReason: 'deleted' | 'blocked' | null;
+  author: UserSummary;
+  createdAt: string;
+  editedAt: string | null;
+  mine: boolean;
+  replies: BoardEntry[];
+}

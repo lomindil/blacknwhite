@@ -9,6 +9,7 @@ import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/errors';
 import { env } from './config/env';
 import { RedisIoAdapter } from './realtime/realtime.gateway';
+import { uploadDir } from './core/storage.service';
 
 async function bootstrap() {
   const config = env();
@@ -19,6 +20,8 @@ async function bootstrap() {
   app.use(cookieParser());
   app.enableCors({ origin: [config.WEB_ORIGIN], credentials: true });
   app.useGlobalFilters(new AllExceptionsFilter());
+  // Uploaded photos (already re-encoded, so safe to serve as-is). Behind a CDN in production.
+  app.useStaticAssets(uploadDir(), { prefix: '/media/', maxAge: '30d', immutable: true, index: false });
 
   const io = new RedisIoAdapter(app);
   io.connectToRedis(config.REDIS_URL);

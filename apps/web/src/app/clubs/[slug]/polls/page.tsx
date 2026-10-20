@@ -20,9 +20,24 @@ export default async function PollsPage({ params }: { params: Promise<{ slug: st
       <ClubSectionHeader title="Polls" subtitle="Decide together — what to read next, when to meet, and anything else." />
       <NewPollPanel clubId={club.id} />
       {polls.length ? (
-        <div className="mt-6 grid items-start gap-5 xl:grid-cols-2">
-          {polls.map((p) => <PollCard key={p.id} poll={p} canClose={isAdmin || p.createdBy.id === me.id} canSetBook={isAdmin} clubSlug={slug} />)}
-        </div>
+        <>
+          {polls.some((p) => !p.closed) && (
+            <section className="mt-8">
+              <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-ochre-700">Open</h3>
+              <div className="grid items-start gap-5 xl:grid-cols-2">
+                {polls.filter((p) => !p.closed).map((p) => <PollCard key={p.id} poll={p} canClose={isAdmin || p.createdBy.id === me.id} canSetBook={isAdmin} clubSlug={slug} />)}
+              </div>
+            </section>
+          )}
+          {polls.some((p) => p.closed) && (
+            <section className="mt-8">
+              <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">Past results</h3>
+              <div className="grid items-start gap-5 xl:grid-cols-2">
+                {polls.filter((p) => p.closed).map((p) => <PollCard key={p.id} poll={p} canClose={false} canSetBook={isAdmin} clubSlug={slug} />)}
+              </div>
+            </section>
+          )}
+        </>
       ) : (
         <div className="mt-6"><Empty title="No polls yet">Ask the club what to read next, or when to meet.</Empty></div>
       )}

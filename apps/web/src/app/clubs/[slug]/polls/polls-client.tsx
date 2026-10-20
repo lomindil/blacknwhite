@@ -3,69 +3,140 @@
 import type { BookSummary, PollInfo } from '@bnw/shared';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { FormError } from '@/components/actions';
 import { BookCover } from '@/components/ui';
 import { call, errorMessage } from '@/lib/client-api';
 import { formatDateTime } from '@/lib/format';
 import { BookPicker } from '@/components/book-picker';
 import { IconPlus } from '@/components/icons';
+import { Modal } from '@/components/modal';
 
-export function PollCard({ poll, canClose, canSetBook, clubSlug }: { poll: PollInfo; canClose: boolean; canSetBook: boolean; clubSlug: string }) {
-  const router = useRouter();
-  const [p, setP] = useState(poll);
+/** The voting itself: tap an option to vote (or change your vote); results show once you've voted. */
+export function PollBallot({ poll, onChange }: { poll: PollInfo; onChange: (p: PollInfo) => void }) {
   const [error, setError] = useState<string | null>(null);
-  const showResults = p.closed || Boolean(p.myVote);
-  const top = Math.max(...p.options.map((o) => o.votes));
-  const winner = p.closed && p.kind === 'book' ? p.options.find((o) => o.votes === top && o.votes > 0) : null;
-
+  const [busy, setBusy] = useState(false);
+  const showResults = poll.closed || Boolean(poll.myVote);
   return (
-    <div className="card">
-      <span className={`chip mb-2 ${p.closed ? '' : 'border-ochre-200 bg-ochre-50 text-ochre-700'}`}>{p.closed ? 'Closed' : p.closesAt ? `Closes ${formatDateTime(p.closesAt)}` : 'Open'}</span>
-      <h2 className="h3 mb-1">{p.question}</h2>
-      <div className="mb-4 text-xs text-muted">Asked by {p.createdBy.displayName} · {p.totalVotes} vote{p.totalVotes === 1 ? '' : 's'}</div>
+    <div>
       <ul className="space-y-2">
-        {p.options.map((o) => {
-          const pct = p.totalVotes ? Math.round((o.votes / p.totalVotes) * 100) : 0;
-          const mine = p.myVote === o.id;
+        {poll.options.map((o, i) => {
+          const pct = poll.totalVotes ? Math.round((o.votes / poll.totalVotes) * 100) : 0;
+          const mine = poll.myVote === o.id;
           return (
-            <li key={o.id}>
+            <li key={o.id} className="animate-fade-up" style={{ animationDelay: `${i * 60}ms` }}>
               <button
                 type="button"
-                disabled={p.closed}
+                disabled={poll.closed || busy}
+                aria-pressed={mine}
                 onClick={async () => {
                   setError(null);
+                  setBusy(true);
                   try {
-                    setP(await call<PollInfo>(`/v1/polls/${p.id}/votes`, { body: { optionId: o.id } }));
+                    onChange(await call<PollInfo>(`/v1/polls/${poll.id}/votes`, { body: { optionId: o.id } }));
                   } catch (e) {
                     setError(errorMessage(e));
+                  } finally {
+                    setBusy(false);
                   }
                 }}
-                className={`relative flex w-full items-center gap-3 overflow-hidden rounded-xl border px-3 py-2 text-left text-sm transition ${mine ? 'border-sage-600' : 'border-line hover:border-sage-300'} disabled:cursor-default`}
+                className={`relative flex w-full items-center gap-3 overflow-hidden rounded-2xl border px-3.5 py-3 text-left text-sm transition ${
+                  mine ? 'border-ochre-300 ring-2 ring-ochre-100' : 'border-line hover:border-ochre-300 hover:bg-ochre-50/40'
+                } disabled:cursor-default`}
               >
-                {showResults && <span className="absolute inset-y-0 left-0 bg-sage-50 transition-all duration-700" style={{ width: `${pct}%` }} aria-hidden />}
+                {showResults && <span className="absolute inset-y-0 left-0 bg-ochre-50 transition-all duration-700" style={{ width: `${pct}%` }} aria-hidden />}
                 {o.book && <span className="relative"><BookCover book={o.book} size="sm" /></span>}
                 <span className="relative flex-1">
-                  {mine && '✓ '}
-                  {o.label}
+                  <span className="font-medium">{o.label}</span>
                   {o.book && <span className="block text-xs text-muted">{o.book.authors[0]}</span>}
                 </span>
-                {showResults && <span className="relative text-xs text-muted">{pct}% · {o.votes}</span>}
+                {mine && <span className="relative rounded-full bg-ochre-600 px-2 py-0.5 text-[10px] font-semibold text-white">Your vote</span>}
+                {showResults && <span className="relative w-14 text-right text-xs tabular-nums text-muted">{pct}% · {o.votes}</span>}
               </button>
             </li>
           );
         })}
       </ul>
-      {!showResults && <p className="mt-2 text-xs text-muted">Vote to see results. You can change your vote until the poll closes.</p>}
+      <p className="mt-3 text-xs text-muted">
+        {poll.closed ? 'This poll is closed.' : showResults ? 'Tap another option to change your vote.' : 'Tap an option to vote. Results appear once you’ve voted.'}
+      </p>
       <FormError error={error} />
-      <div className="mt-4 flex flex-wrap gap-2">
+    </div>
+  );
+}
+
+/** "Vote" button that opens the ballot in a dialog over the current page. */
+export function VotePollButton({ poll, className = 'btn btn-sm', label }: { poll: PollInfo; className?: string; label?: string }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [p, setP] = useState(poll);
+  useEffect(() => setP(poll), [poll]);
+  const close = useCallback(() => {
+    setOpen(false);
+    router.refresh();
+  }, [router]);
+  return (
+    <>
+      <button type="button" className={className} onClick={() => setOpen(true)}>
+        {label ?? (p.closed ? 'See results' : p.myVote ? 'Change vote' : 'Vote now')}
+      </button>
+      <Modal open={open} onClose={close} title={p.question}>
+        <div className="-mt-2 mb-5 text-sm text-muted">
+          Asked by {p.createdBy.displayName} · {p.totalVotes} vote{p.totalVotes === 1 ? '' : 's'}
+          {p.closesAt && !p.closed && ` · closes ${formatDateTime(p.closesAt)}`}
+        </div>
+        <PollBallot poll={p} onChange={setP} />
+        <div className="mt-6 flex justify-end">
+          <button type="button" className="btn" onClick={close}>
+            {p.myVote ? 'Done' : 'Close'}
+          </button>
+        </div>
+      </Modal>
+    </>
+  );
+}
+
+/** Summary card on the Polls page: results at a glance; voting happens in the dialog. */
+export function PollCard({ poll, canClose, canSetBook, clubSlug }: { poll: PollInfo; canClose: boolean; canSetBook: boolean; clubSlug: string }) {
+  const [p, setP] = useState(poll);
+  useEffect(() => setP(poll), [poll]);
+  const showResults = p.closed || Boolean(p.myVote);
+  const top = Math.max(...p.options.map((o) => o.votes));
+  const winner = p.closed && p.kind === 'book' ? p.options.find((o) => o.votes === top && o.votes > 0) : null;
+
+  return (
+    <div className={`card ${p.closed ? 'bg-paper' : ''}`}>
+      <span className={`chip mb-2 ${p.closed ? '' : 'border-ochre-200 bg-ochre-50 text-ochre-700'}`}>{p.closed ? 'Closed' : p.closesAt ? `Closes ${formatDateTime(p.closesAt)}` : 'Open'}</span>
+      <h2 className="h3 mb-1">{p.question}</h2>
+      <div className="mb-4 text-xs text-muted">Asked by {p.createdBy.displayName} · {p.totalVotes} vote{p.totalVotes === 1 ? '' : 's'}{p.myVote ? ' · you voted' : ''}</div>
+      <ul className="space-y-2.5">
+        {p.options.map((o) => {
+          const pct = p.totalVotes ? Math.round((o.votes / p.totalVotes) * 100) : 0;
+          const isWinner = winner?.id === o.id;
+          return (
+            <li key={o.id} className="text-sm">
+              <div className="mb-1 flex justify-between gap-3">
+                <span className={`truncate ${isWinner ? 'font-semibold' : ''}`}>{o.label}{isWinner && <span className="ml-1.5 rounded-full bg-ochre-600 px-1.5 py-0.5 text-[10px] font-semibold text-white">Winner</span>}{p.myVote === o.id && <span className="ml-1.5 text-xs text-ochre-700">· your vote</span>}</span>
+                {showResults && <span className="shrink-0 text-xs tabular-nums text-muted">{pct}%</span>}
+              </div>
+              {showResults && (
+                <div className="h-1.5 overflow-hidden rounded-full bg-ochre-50">
+                  <div className="h-full rounded-full bg-ochre-300 transition-all duration-700" style={{ width: `${pct}%` }} />
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      <div className="mt-5 flex flex-wrap gap-2">
+        {!p.closed && <VotePollButton poll={p} />}
         {!p.closed && canClose && (
           <button type="button" className="btn-ghost btn-sm" onClick={async () => setP(await call<PollInfo>(`/v1/polls/${p.id}/close`, { method: 'POST' }))}>
             Close poll
           </button>
         )}
         {winner?.book && canSetBook && (
-          <Link href={`/clubs/${clubSlug}/settings?book=${winner.book.id}#book`} className="btn btn-sm" onClick={() => router.refresh()}>
+          <Link href={`/clubs/${clubSlug}/settings?book=${winner.book.id}#book`} className="btn btn-sm">
             Make “{winner.book.title}” the next read
           </Link>
         )}

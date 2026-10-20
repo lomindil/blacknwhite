@@ -216,6 +216,15 @@ async function main() {
       visibility: 'private' in c && c.private ? 'private' : 'public',
     });
     clubIds[c.key] = detail.id;
+    if (c.key === 'koramangala') {
+      // An earlier read, so the club has an archive.
+      await clubs.setBook(detail.id, users[c.owner], {
+        bookId: bookIds.pride,
+        startsOn: new Date(Date.now() - 80 * DAY),
+        totalChapters: 61,
+        chaptersPerWeek: 10,
+      });
+    }
     const book = BOOKS.find((b) => b.key === c.book)!;
     await clubs.setBook(detail.id, users[c.owner], {
       bookId: bookIds[c.book],
@@ -260,6 +269,7 @@ async function main() {
     [users.divya, 'chemmeen', 'reading', 8],
     [users.sahil, 'remains', 'reading', 2],
     [users.meera, 'pride', 'read', 61],
+    [users.arjun, 'pride', 'read', 61],
     [users.meera, 'heart', 'want', 0],
     [users.fatima, 'tomb', 'read', 3],
   ];
@@ -271,9 +281,12 @@ async function main() {
 
   // ---------- Discussion ----------
   await resetLimits();
-  const threadsFor = async (clubKey: string) =>
-    prisma.thread.findMany({ where: { clubId: clubIds[clubKey] }, orderBy: { scheduleWeek: 'asc' } });
-  const kThreads = await threadsFor('koramangala');
+  const threadsFor = async (clubKey: string, bookKey?: string) =>
+    prisma.thread.findMany({
+      where: { clubId: clubIds[clubKey], isBoard: false, ...(bookKey ? { bookId: bookIds[bookKey] } : {}) },
+      orderBy: { scheduleWeek: 'asc' },
+    });
+  const kThreads = await threadsFor('koramangala', 'gost');
   const intro = kThreads.find((t) => t.scheduleWeek === 0)!;
   const week1 = kThreads.find((t) => t.scheduleWeek === 1)!;
   const week2 = kThreads.find((t) => t.scheduleWeek === 2)!;
@@ -284,12 +297,28 @@ async function main() {
   await discussion.createPost(week1.id, users.arjun, { body: 'Yes! Also the capitalised phrases — Big Man the Laltain, Small Man the Mombatti. ||Watch how often "Things can change in a day" comes back.||' });
   await discussion.createPost(week2.id, users.meera, { body: "Baby Kochamma is one of the most quietly terrifying characters I've read." });
   await discussion.createPost(week2.id, users.divya, { body: 'Just wait until the later chapters…', chapterRef: 18 });
-  await discussion.createThread(clubIds.koramangala, users.arjun, {
-    title: 'Where should we meet in person this month?',
-    body: 'Options so far: the usual café on 5th Block, or the reading room at Jacaranda Books. Thoughts?',
-    chapterGate: 0,
-    bookId: null,
+  // Archive: the club's previous book.
+  const pThreads = await threadsFor('koramangala', 'pride');
+  await discussion.createPost(pThreads.find((t) => t.scheduleWeek === -1)!.id, users.meera, { body: 'Re-reading Austen as an adult — Mr Bennet is so much funnier, and so much less forgivable.' });
+  await discussion.createPost(pThreads.find((t) => t.scheduleWeek === -1)!.id, users.arjun, { body: 'Charlotte Lucas deserves her own novel.' });
+  // Message board: the club's general feed.
+  const where = await discussion.postToBoard(clubIds.koramangala, users.arjun, {
+    title: 'Where should we meet this month?',
+    body: 'Options so far: the usual café on 5th Block, or the reading room at Jacaranda Books. Vote with a comment!',
+    mediaIds: [],
   });
+  await discussion.reply(where.id, users.meera, 'Jacaranda! They said we can use the back room on Sundays.');
+  const plusOne = await discussion.reply(where.id, users.karthik, '+1 for Jacaranda, it’s closer to the metro.');
+  await discussion.reply(plusOne.id, users.arjun, 'Jacaranda it is, then. I’ll book the back room.');
+  for (const u of [users.meera, users.karthik, users.divya]) await discussion.react(where.id, u, 'like');
+  await discussion.react(where.id, users.meera, 'love');
+  await discussion.react(plusOne.id, users.meera, 'like');
+  await discussion.postToBoard(clubIds.koramangala, users.meera, {
+    title: 'Welcome, new members 👋',
+    body: 'Introduce yourselves here — what are you reading on the side?',
+    mediaIds: [],
+  });
+  await resetLimits();
   await resetLimits();
   const mThreads = await threadsFor('monsoon');
   await discussion.createPost(mThreads.find((t) => t.scheduleWeek === 0)!.id, users.arjun, { body: "Ghosh's research is staggering. Keep a glossary handy — or don't, and let the language wash over you." });

@@ -3,15 +3,16 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { IconBook, IconChat, IconSettings, IconUsers, IconVote } from '@/components/icons';
+import { IconBook, IconChat, IconHome, IconSettings, IconUsers, IconVote } from '@/components/icons';
 
 /** Club sections: a vertical list in the side panel on desktop, a scrollable pill row on mobile. */
 export function ClubNav({ slug, isAdmin }: { slug: string; isAdmin: boolean }) {
   const pathname = usePathname();
   const base = `/clubs/${slug}`;
   const items: { href: string; label: string; icon: ReactNode; match?: (p: string) => boolean }[] = [
-    { href: base, label: 'Overview', icon: <IconBook size={18} />, match: (p) => p === base },
-    { href: `${base}/discussion`, label: 'Discussion', icon: <IconChat size={18} />, match: (p) => p.startsWith(`${base}/discussion`) || p.startsWith(`${base}/threads/`) },
+    { href: base, label: 'Overview', icon: <IconHome size={18} />, match: (p) => p === base },
+    { href: `${base}/board`, label: 'Message board', icon: <IconChat size={18} /> },
+    { href: `${base}/discussion`, label: 'Book discussion', icon: <IconBook size={18} />, match: (p) => p.startsWith(`${base}/discussion`) || p.startsWith(`${base}/threads/`) },
     { href: `${base}/polls`, label: 'Polls', icon: <IconVote size={18} /> },
     { href: `${base}/members`, label: 'Members', icon: <IconUsers size={18} /> },
     ...(isAdmin ? [{ href: `${base}/settings`, label: 'Manage', icon: <IconSettings size={18} /> }] : []),

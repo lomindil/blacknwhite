@@ -36,6 +36,10 @@ const schema = z.object({
   AMAZON_ASSOCIATE_TAG: optional,
   RUN_WORKER_IN_API: bool,
   SESSION_TTL_DAYS: z.coerce.number().default(30),
+  /** Where uploaded photos are written (relative to the API's working directory). */
+  UPLOAD_DIR: z.string().default('uploads'),
+  /** Public URL prefix for photos. The web app proxies /media to the API. */
+  MEDIA_BASE_URL: z.string().default('/media'),
 });
 
 export type Env = z.infer<typeof schema>;

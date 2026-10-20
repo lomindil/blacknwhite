@@ -77,3 +77,13 @@ export const IconSend = (p: P) => (
 export const IconLink = (p: P) => (
   <Icon {...p}><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></Icon>
 );
+export const IconThumb = ({ filled, ...p }: P & { filled?: boolean }) => (
+  <Icon {...p} fill={filled ? 'currentColor' : 'none'}>
+    <path d="M7 10.5V20H4.5A1.5 1.5 0 0 1 3 18.5v-6.5a1.5 1.5 0 0 1 1.5-1.5H7Zm0 0 3.6-6.3a1.9 1.9 0 0 1 3.5 1.2l-.6 3.6h5a2 2 0 0 1 2 2.4l-1.3 6.5A2 2 0 0 1 17.2 20H7" />
+  </Icon>
+);
+export const IconHeartFill = ({ filled, ...p }: P & { filled?: boolean }) => (
+  <Icon {...p} fill={filled ? 'currentColor' : 'none'}>
+    <path d="M12 20s-7.5-4.4-7.5-10A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 7.5 3c0 5.6-7.5 10-7.5 10Z" />
+  </Icon>
+);

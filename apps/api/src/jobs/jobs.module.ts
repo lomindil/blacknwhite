@@ -13,6 +13,7 @@ import { EventsModule } from '../events/events.module';
 import { EventsService, ReminderJob } from '../events/events.service';
 import { ImportsModule } from '../imports/imports.module';
 import { ImportJobData, ImportsService } from '../imports/imports.service';
+import { MediaModule, MediaService } from '../media/media.module';
 
 /**
  * Background jobs (docs/architecture.md §2): imports, aggregate counters, notification
@@ -34,6 +35,7 @@ export class JobsRunner implements OnModuleInit, OnModuleDestroy {
     private readonly clubs: ClubsService,
     private readonly events: EventsService,
     private readonly imports: ImportsService,
+    private readonly media: MediaService,
   ) {}
 
   async onModuleInit() {
@@ -58,6 +60,7 @@ export class JobsRunner implements OnModuleInit, OnModuleDestroy {
     // Times in UTC: 08:00 IST digest, 09:00 IST schedule nudges.
     await cron.upsertJobScheduler('digest', { pattern: '30 2 * * *' }, { name: 'digest' });
     await cron.upsertJobScheduler('schedule-nudges', { pattern: '30 3 * * *' }, { name: 'schedule-nudges' });
+    await cron.upsertJobScheduler('media-cleanup', { pattern: '0 22 * * *' }, { name: 'media-cleanup' });
 
     await this.search.setup();
     await this.books.recomputeStats().catch((e) => this.logger.warn(`Initial stats failed: ${e.message}`));
@@ -72,6 +75,7 @@ export class JobsRunner implements OnModuleInit, OnModuleDestroy {
     if (name === 'stats') return this.books.recomputeStats();
     if (name === 'digest') return this.sendDigests();
     if (name === 'schedule-nudges') return this.clubs.sendScheduleNudges();
+    if (name === 'media-cleanup') return this.media.cleanupUnattached();
   }
 
   private async deliver(job: DeliverJob) {
@@ -110,7 +114,7 @@ export class JobsRunner implements OnModuleInit, OnModuleDestroy {
 }
 
 @Module({
-  imports: [BooksModule, ClubsModule, EventsModule, ImportsModule],
+  imports: [BooksModule, ClubsModule, EventsModule, ImportsModule, MediaModule],
   providers: [JobsRunner],
 })
 export class JobsModule {}

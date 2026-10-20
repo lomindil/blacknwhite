@@ -7,6 +7,7 @@ import { QueueService } from './queue.service';
 import { RealtimeService } from './realtime.service';
 import { RedisService } from './redis.service';
 import { SearchService } from './search.service';
+import { StorageService } from './storage.service';
 
 const providers = [
   PrismaService,
@@ -18,6 +19,7 @@ const providers = [
   RealtimeService,
   NotificationsService,
   AccessService,
+  StorageService,
 ];
 
 /** Shared infrastructure used by every feature module, in both the API and the worker. */

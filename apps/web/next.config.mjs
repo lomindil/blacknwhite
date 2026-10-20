@@ -11,6 +11,7 @@ const nextConfig = {
     return [
       { source: '/api/:path*', destination: `${API_URL}/:path*` },
       { source: '/auth/:path*', destination: `${API_URL}/auth/:path*` },
+      { source: '/media/:path*', destination: `${API_URL}/media/:path*` },
     ];
   },
   async headers() {

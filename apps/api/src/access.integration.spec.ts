@@ -201,4 +201,49 @@ describe('authorization (integration)', () => {
       await expect(clubs.leave(clubId, users.owner)).rejects.toMatchObject({ status: 400 });
     });
   });
+
+  describe('message board', () => {
+    let postId: string;
+    let commentId: string;
+
+    it('shows posts in the feed with a comment count, not the comments', async () => {
+      const post = await discussion.postToBoard(clubId, users.owner, { title: 'Meetup photos', body: 'Thanks all!', mediaIds: [] });
+      postId = post.id;
+      const c = await discussion.reply(postId, users.early, 'Lovely morning');
+      commentId = c.id;
+      const feed = await discussion.board(clubId, users.early.id, undefined, 10);
+      const item = feed.items.find((p) => p.id === postId)!;
+      expect(item.title).toBe('Meetup photos');
+      expect(item.commentCount).toBe(1);
+      expect(item.replies).toEqual([]);
+    });
+
+    it('nests replies to comments and returns the whole tree on the post page', async () => {
+      const r = await discussion.reply(commentId, users.owner, 'Agreed!');
+      await discussion.reply(r.id, users.early, 'Same time next week?');
+      const detail = await discussion.boardPost(postId, users.early.id);
+      expect(detail.commentCount).toBe(3);
+      expect(detail.replies).toHaveLength(1);
+      expect(detail.replies[0].replies[0].body).toBe('Agreed!');
+      expect(detail.replies[0].replies[0].replies[0].body).toBe('Same time next week?');
+      const feed = await discussion.board(clubId, users.early.id, undefined, 10);
+      expect(feed.items.find((p) => p.id === postId)!.commentCount).toBe(3);
+    });
+
+    it('toggles 👍 and ❤️ reactions on posts and comments', async () => {
+      expect(await discussion.react(postId, users.early, 'like')).toEqual({ like: 1, love: 0, mine: ['like'] });
+      expect(await discussion.react(postId, users.early, 'love')).toMatchObject({ like: 1, love: 1 });
+      expect(await discussion.react(postId, users.early, 'like')).toEqual({ like: 0, love: 1, mine: ['love'] });
+      expect(await discussion.react(commentId, users.owner, 'love')).toEqual({ like: 0, love: 1, mine: ['love'] });
+      const detail = await discussion.boardPost(postId, users.owner.id);
+      expect(detail.reactions).toEqual({ like: 0, love: 1, mine: [] });
+      expect(detail.replies[0].reactions).toEqual({ like: 0, love: 1, mine: ['love'] });
+    });
+
+    it('keeps non-members out', async () => {
+      await expect(discussion.board(clubId, users.outsider.id, undefined, 10)).rejects.toMatchObject({ status: 403 });
+      await expect(discussion.boardPost(postId, users.outsider.id)).rejects.toMatchObject({ status: 403 });
+      await expect(discussion.react(postId, users.outsider, 'like')).rejects.toMatchObject({ status: 403 });
+    });
+  });
 });

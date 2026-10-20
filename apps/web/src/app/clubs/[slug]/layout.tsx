@@ -1,7 +1,7 @@
 import type { ClubDetail } from '@bnw/shared';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ActionButton, ReportButton } from '@/components/actions';
+import { ActionButton } from '@/components/actions';
 import { IconCalendar, IconLink } from '@/components/icons';
 import { BookCover } from '@/components/ui';
 import { cityName, languageName, plural } from '@/lib/format';
@@ -101,11 +101,6 @@ export default async function ClubLayout({ params, children }: Props) {
             </div>
           )}
         </div>
-        {me && !isAdmin && (
-          <div className="mt-3 px-2">
-            <ReportButton targetType="club" targetId={club.id} label="Report this club" />
-          </div>
-        )}
       </aside>
 
       <div className="min-w-0">{children}</div>

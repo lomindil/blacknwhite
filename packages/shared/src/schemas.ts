@@ -311,3 +311,17 @@ export const reviewBookSchema = z.object({ decision: z.enum(['approve', 'reject'
 export const markNotificationsReadSchema = z.object({
   ids: z.array(z.string().uuid()).max(200).optional(),
 });
+
+// ---------- Message board ----------
+
+export const MAX_POST_PHOTOS = 4;
+
+export const boardPostSchema = z.object({
+  title: trimmed(3, 150),
+  body: z.string().trim().max(5000).default(''),
+  mediaIds: z.array(z.string().uuid()).max(MAX_POST_PHOTOS).default([]),
+});
+export type BoardPostInput = z.infer<typeof boardPostSchema>;
+export const replySchema = z.object({ body: trimmed(1, 3000) });
+
+export const reactionSchema = z.object({ kind: z.enum(['like', 'love']) });

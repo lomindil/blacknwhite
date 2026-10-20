@@ -33,7 +33,12 @@ export default async function ThreadPage({ params }: { params: Promise<{ slug: s
 
   return (
     <div className="max-w-4xl">
-      <Link href={`/clubs/${slug}/discussion`} className="text-sm text-muted transition hover:text-ink">← All discussion</Link>
+      <Link
+        href={`/clubs/${slug}/${thread.book ? `discussion${thread.book.id !== club.currentBook?.id ? `?book=${thread.book.id}` : ''}` : 'discussion'}`}
+        className="text-sm text-muted transition hover:text-ink"
+      >
+        ← {thread.book ? thread.book.title : 'Book discussion'}
+      </Link>
       <header className="mt-3 animate-fade-up border-b border-line pb-5">
         <h2 className="font-serif text-3xl font-medium leading-tight tracking-tight">{thread.title}</h2>
         <div className="mt-2 flex flex-wrap gap-2 text-xs">

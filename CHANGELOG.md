@@ -13,6 +13,24 @@ Format:
 
 ---
 
+## 2026-10-20 — Board reactions, comment threads, post pages
+
+**Docs:** architecture (§12)
+**Change:** The board feed no longer shows comments inline: each post ends with 👍/❤️ reactions on the left and "N comments · View all" on the right, which opens the post's own page (`/clubs/:slug/board/:postId`) with the full comment thread. Comments can be reacted to and replied to at any depth (indented up to four levels). Notifications go to the person replied to and to the post's author. Schema: `posts.root_id` (backfilled), new `post_reactions` table (migration `reactions_and_comment_threads`). New endpoints: `GET /v1/board-posts/:id`, `POST /v1/posts/:id/reactions` (toggle).
+**Why:** Keep the feed scannable, give conversations their own space, and let people respond lightly without writing a comment.
+
+## 2026-10-20 — Board posts with titles and photos
+
+**Docs:** architecture (§12)
+**Change:** Message-board posts now have a title, a message and up to 4 photos, shown as a gallery with a full-screen viewer. Photos upload on selection (`POST /v1/media`) and attach to the post by id; the API re-encodes every image with sharp (WebP, max 1600px, orientation applied), which strips EXIF including GPS location. Stored on disk under `UPLOAD_DIR` and served at `/media/…` (proxied by the web app); unattached uploads are deleted by a daily job. Schema: `posts.title`, new `media` table (migration `post_titles_and_media`). Removed posts without comments now disappear from the board.
+**Why:** Club members want to share meetup photos and announcements as proper posts — without leaking where a photo was taken.
+
+## 2026-10-20 — Club message board, book archive, poll pop-ups
+
+**Docs:** architecture (§12)
+**Change:** Each club gets a message board — a general feed where members post and comment (replaces "start a conversation"; book talk stays in the book's weekly threads). Book discussion now keeps an archive of every earlier book, whose threads stay open for reading and posting. Voting happens in a pop-up over the page (overview and Polls page); the Polls page is for creating polls and seeing past results. "About this club" moved to the top of the overview; "Report this club" removed from the club panel for now. Schema: `threads.is_board`, `posts.parent_id` (migration `board_and_replies`). New endpoints: `GET/POST /v1/clubs/:id/board`, `POST /v1/posts/:id/replies`.
+**Why:** Clubs need an everyday place to talk that isn't tied to a chapter, readers want to revisit past books, and voting shouldn't take you away from the page.
+
 ## 2026-10-20 — Club side panel, two-pane messages, landing for everyone
 
 **Docs:** — (UI only)
