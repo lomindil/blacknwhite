@@ -13,6 +13,12 @@ Format:
 
 ---
 
+## 2026-10-20 — About page, community blog, admin portal
+
+**Docs:** architecture (§12), README, open-questions
+**Change:** Added an About Us page (`/about`). Added the community blog from the Phase 2 plan, early: anyone can write (cover photo, inline photos, tags, drafts), readers like posts, "Most loved" surfaces the best; posts from accounts younger than 7 days wait for review; blog posts can be reported. Added an unlisted admin portal at `/ops` with its own email/password login (defaults in `OPS_EMAIL`/`OPS_PASSWORD`; the API refuses to start in production with the default password): overview stats (DAU/WAU/MAU, signups, weekly active clubs, activity, content and safety counts, 30-day charts, top clubs and cities), user search with deactivate/reactivate, club search with shut down/restore, blog review queue, and an audit log of every portal action. Active users are tracked with `users.last_active_at` (throttled) and per-day Redis HyperLogLogs. Schema: `users.last_active_at/suspended_at/suspended_reason`, `clubs.shutdown_reason`, `blog_posts`, `blog_likes`, `admin_actions`, `media.blog_post_id` (migration `blog_and_admin_portal`).
+**Why:** The site needed an About page and the blog; operating the platform needs visibility and the ability to act on accounts and clubs.
+
 ## 2026-10-20 — Board reactions, comment threads, post pages
 
 **Docs:** architecture (§12)

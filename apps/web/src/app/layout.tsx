@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Fraunces, Inter } from 'next/font/google';
+import { SiteChrome } from '@/components/chrome';
 import { Footer } from '@/components/footer';
 import { Nav } from '@/components/nav';
 import { BRAND } from '@/lib/brand';
@@ -24,11 +25,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-surface focus:px-4 focus:py-2 focus:shadow-card">
           Skip to content
         </a>
-        <Nav me={me} />
-        <main id="main" className="mx-auto w-full max-w-page flex-1 px-4 py-8 sm:py-12">
+        <SiteChrome nav={<Nav me={me} />} footer={<Footer />}>
           {children}
-        </main>
-        <Footer />
+        </SiteChrome>
       </body>
     </html>
   );

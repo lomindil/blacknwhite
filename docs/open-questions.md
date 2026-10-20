@@ -14,3 +14,4 @@ Inconsistencies and undecided points across the plan. Resolve each one, update t
 | 8 | **Google OAuth credentials** | Architecture §4 | Create an OAuth client in Google Cloud Console (redirect URI `http://localhost:3000/auth/google/callback` for dev) and set `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` in `apps/api/.env`. Until then, use dev sign-in. |
 | 9 | **WhatsApp Business account and templates** | Architecture §7.7 | Needs a Meta Business account, a verified number, and approved templates `event_reminder` and `weekly_schedule_nudge`. |
 | 10 | **Amazon Associates and Flipkart affiliate sign-up** | Business plan §6 | Buy links already work; set `AMAZON_ASSOCIATE_TAG` once approved so they earn commission. |
+| 11 | **Harden admin portal sign-in** | Architecture §12 | Currently one shared email/password from env. Before launch: per-person admin accounts, 2FA (TOTP), IP allow-list or SSO, and alerting on failed logins. |

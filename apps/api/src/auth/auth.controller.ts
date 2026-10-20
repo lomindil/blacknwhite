@@ -25,6 +25,7 @@ export class AccountService {
     });
     const isAdmin = env().ADMIN_EMAILS.includes(profile.email);
 
+    if (identity?.user.suspendedAt) throw new AppError(403, 'ACCOUNT_SUSPENDED', 'This account has been deactivated. Contact support if you think this is a mistake.');
     if (identity && !identity.user.deletedAt) {
       if (isAdmin && !identity.user.isAdmin) {
         return this.prisma.user.update({ where: { id: identity.user.id }, data: { isAdmin: true } });
@@ -33,6 +34,7 @@ export class AccountService {
     }
 
     const existing = await this.prisma.user.findUnique({ where: { email: profile.email } });
+    if (existing?.suspendedAt) throw new AppError(403, 'ACCOUNT_SUSPENDED', 'This account has been deactivated. Contact support if you think this is a mistake.');
     if (existing && !existing.deletedAt) {
       await this.prisma.userIdentity.create({ data: { userId: existing.id, provider, providerUserId } });
       return existing;

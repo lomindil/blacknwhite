@@ -287,7 +287,7 @@ export type CreateBookstoreInput = z.infer<typeof createBookstoreSchema>;
 
 // ---------- Safety ----------
 
-export const reportTargetTypes = ['post', 'thread', 'dm_message', 'user', 'club', 'event', 'book'] as const;
+export const reportTargetTypes = ['post', 'thread', 'dm_message', 'user', 'club', 'event', 'book', 'blog'] as const;
 
 export const createReportSchema = z.object({
   targetType: z.enum(reportTargetTypes),
@@ -325,3 +325,35 @@ export type BoardPostInput = z.infer<typeof boardPostSchema>;
 export const replySchema = z.object({ body: trimmed(1, 3000) });
 
 export const reactionSchema = z.object({ kind: z.enum(['like', 'love']) });
+
+// ---------- Blog ----------
+
+export const blogPostSchema = z.object({
+  title: trimmed(5, 150),
+  excerpt: z.string().trim().max(300).optional(),
+  body: trimmed(1, 50000),
+  tags: z.array(z.string().trim().toLowerCase().min(2).max(30).regex(/^[\p{L}\p{N} -]+$/u, 'Tags use letters, numbers and spaces')).max(5).default([]),
+  coverMediaId: z.string().uuid().nullable().optional(),
+  /** false = save as draft. */
+  publish: z.boolean().default(false),
+});
+export type BlogPostInput = z.infer<typeof blogPostSchema>;
+
+export const blogListQuery = z.object({
+  sort: z.enum(['latest', 'top']).default('latest'),
+  tag: z.string().trim().toLowerCase().max(30).optional(),
+  cursor: z.string().uuid().optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(12),
+});
+
+// ---------- Admin portal ----------
+
+export const opsLoginSchema = z.object({ email: z.string().email(), password: z.string().min(1).max(200) });
+export const opsReasonSchema = z.object({ reason: trimmed(3, 500) });
+export const opsListQuery = z.object({
+  q: z.string().trim().max(100).optional(),
+  status: z.enum(['all', 'active', 'suspended', 'shutdown']).default('all'),
+  cursor: z.string().uuid().optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(30),
+});
+export const opsBlogReviewSchema = z.object({ decision: z.enum(['approve', 'remove']), note: z.string().trim().max(500).optional() });

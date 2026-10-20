@@ -27,6 +27,11 @@ model User {
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
   deletedAt       DateTime? @map("deleted_at")
+  /// Updated at most every few minutes while the user is active.
+  lastActiveAt    DateTime? @map("last_active_at")
+  /// Set by the admin portal. Suspended users can't sign in and their sessions are ended.
+  suspendedAt     DateTime? @map("suspended_at")
+  suspendedReason String?   @map("suspended_reason")
 
   identities       UserIdentity[]
   settings         UserSettings?
@@ -39,6 +44,8 @@ model User {
   dmMessages       DmMessage[]
   media            Media[]
   reactions        PostReaction[]
+  blogPosts        BlogPost[]
+  blogLikes        BlogLike[]
   rsvps            EventRsvp[]
   eventsCreated    Event[]
   notifications    Notification[]
@@ -53,6 +60,7 @@ model User {
   bookstores       Bookstore[]
 
   @@index([city])
+  @@index([lastActiveAt])
   @@map("users")
 }
 
@@ -260,6 +268,8 @@ model Club {
   createdAt     DateTime       @default(now()) @map("created_at")
   updatedAt     DateTime       @updatedAt @map("updated_at")
   deletedAt     DateTime?      @map("deleted_at")
+  /// Set when the admin portal shuts the club down (deletedAt is also set); cleared on restore.
+  shutdownReason String?       @map("shutdown_reason")
 
   owner       User         @relation("ClubOwner", fields: [ownerId], references: [id])
   currentBook Book?        @relation("ClubCurrentBook", fields: [currentBookId], references: [id], onDelete: SetNull)
@@ -607,6 +617,7 @@ enum ReportTarget {
   club
   event
   book
+  blog
 }
 
 enum ReportStatus {
@@ -688,6 +699,8 @@ model Media {
   id        String   @id @default(uuid(7)) @db.Uuid
   ownerId   String   @map("owner_id") @db.Uuid
   postId    String?  @map("post_id") @db.Uuid
+  /// Photos used in a blog post (cover or inline).
+  blogPostId String? @map("blog_post_id") @db.Uuid
   key       String   @unique
   width     Int
   height    Int
@@ -696,9 +709,12 @@ model Media {
   createdAt DateTime @default(now()) @map("created_at")
 
   owner User  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  post  Post? @relation(fields: [postId], references: [id], onDelete: Cascade)
+  post     Post?     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  blogPost BlogPost? @relation("BlogMedia", fields: [blogPostId], references: [id], onDelete: Cascade)
+  coverOf  BlogPost? @relation("BlogCover")
 
   @@index([postId, position])
+  @@index([blogPostId])
   @@index([ownerId, createdAt])
   @@map("media")
 }
@@ -721,4 +737,70 @@ model PostReaction {
   @@id([postId, userId, kind])
   @@index([postId, kind])
   @@map("post_reactions")
+}
+
+// ---------- Community blog ----------
+
+enum BlogStatus {
+  draft
+  pending
+  published
+  removed
+}
+
+/// Anyone can write; posts from new accounts wait for review. The most-liked posts surface.
+model BlogPost {
+  id           String     @id @default(uuid(7)) @db.Uuid
+  authorId     String     @map("author_id") @db.Uuid
+  title        String
+  slug         String     @unique
+  excerpt      String?
+  body         String
+  tags         String[]   @default([])
+  coverMediaId String?    @unique @map("cover_media_id") @db.Uuid
+  status       BlogStatus @default(draft)
+  likeCount    Int        @default(0) @map("like_count")
+  readMinutes  Int        @default(1) @map("read_minutes")
+  publishedAt  DateTime?  @map("published_at")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  author User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  cover  Media?     @relation("BlogCover", fields: [coverMediaId], references: [id], onDelete: SetNull)
+  media  Media[]    @relation("BlogMedia")
+  likes  BlogLike[]
+
+  @@index([status, publishedAt])
+  @@index([status, likeCount])
+  @@index([authorId, updatedAt])
+  @@map("blog_posts")
+}
+
+model BlogLike {
+  postId    String   @map("post_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  post BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([postId, userId])
+  @@map("blog_likes")
+}
+
+// ---------- Admin portal ----------
+
+/// Every action taken in the admin portal, for accountability.
+model AdminAction {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  admin      String
+  action     String
+  targetType String   @map("target_type")
+  targetId   String   @map("target_id")
+  targetName String?  @map("target_name")
+  note       String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@map("admin_actions")
 }

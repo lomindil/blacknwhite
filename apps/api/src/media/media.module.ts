@@ -33,7 +33,7 @@ export class MediaService {
   /** Daily job: delete photos uploaded but never attached to a post. */
   async cleanupUnattached() {
     const stale = await this.prisma.media.findMany({
-      where: { postId: null, createdAt: { lt: new Date(Date.now() - 24 * 3600 * 1000) } },
+      where: { postId: null, blogPostId: null, coverOf: null, createdAt: { lt: new Date(Date.now() - 24 * 3600 * 1000) } },
       take: 500,
     });
     for (const m of stale) await this.storage.remove(m.key);

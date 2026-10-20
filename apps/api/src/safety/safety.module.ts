@@ -30,6 +30,7 @@ export class SafetyService {
       case 'club': return Boolean(await this.prisma.club.findUnique(where));
       case 'event': return Boolean(await this.prisma.event.findUnique(where));
       case 'book': return Boolean(await this.prisma.book.findUnique(where));
+      case 'blog': return Boolean(await this.prisma.blogPost.findUnique(where));
       default: return false;
     }
   }
@@ -115,6 +116,10 @@ export class SafetyService {
         const b = await this.prisma.book.findUnique({ where: { id: r.targetId } });
         return b ? { excerpt: b.title, author: null, url: `/books/${b.id}` } : { excerpt: null, author: null, url: null };
       }
+      case 'blog': {
+        const b = await this.prisma.blogPost.findUnique({ where: { id: r.targetId }, include: { author: { select: userSummarySelect } } });
+        return b ? { excerpt: `${b.title}\n${b.body.slice(0, 400)}`, author: toUserSummary(b.author), url: `/blog/${b.slug}` } : { excerpt: null, author: null, url: null };
+      }
     }
   }
 
@@ -158,8 +163,11 @@ export class SafetyService {
           await this.prisma.book.updateMany({ where: { id: r.targetId }, data: { status: 'rejected' } });
           await this.queues.add('search', 'book', { id: r.targetId });
           break;
+        case 'blog':
+          await this.prisma.blogPost.updateMany({ where: { id: r.targetId }, data: { status: 'removed' } });
+          break;
         case 'user':
-          // Account suspension isn't in Phase 1; clear the profile text that was reported.
+          // Accounts are deactivated from the admin portal; here, clear the profile text that was reported.
           await this.prisma.user.updateMany({ where: { id: r.targetId }, data: { bio: null } });
           break;
       }

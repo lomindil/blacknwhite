@@ -357,3 +357,87 @@ export interface BoardEntry {
   mine: boolean;
   replies: BoardEntry[];
 }
+
+// ---------- Blog ----------
+
+export type BlogStatus = 'draft' | 'pending' | 'published' | 'removed';
+
+export interface BlogSummary {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  tags: string[];
+  cover: MediaInfo | null;
+  author: UserSummary;
+  status: BlogStatus;
+  publishedAt: string | null;
+  updatedAt: string;
+  likeCount: number;
+  readMinutes: number;
+}
+
+export interface BlogDetail extends BlogSummary {
+  body: string;
+  likedByMe: boolean;
+  mine: boolean;
+}
+
+// ---------- Admin portal ----------
+
+export interface SeriesPoint {
+  date: string;
+  value: number;
+}
+
+export interface OpsStats {
+  generatedAt: string;
+  users: { total: number; newToday: number; new7d: number; new30d: number; suspended: number; dau: number; wau: number; mau: number; onboardedPct: number };
+  clubs: { total: number; public: number; private: number; shutdown: number; new7d: number; weeklyActive: number; avgMembers: number };
+  activity: { posts7d: number; boardPosts7d: number; comments7d: number; reactions7d: number; dms7d: number; rsvps7d: number; upcomingEvents: number; imports7d: number };
+  content: { books: number; pendingBooks: number; blogPublished: number; blogPending: number; openReports: number };
+  series: { dau: SeriesPoint[]; signups: SeriesPoint[]; posts: SeriesPoint[] };
+  topClubs: { id: string; name: string; slug: string; city: string | null; posts7d: number; members: number }[];
+  topCities: { city: string; users: number }[];
+}
+
+export interface OpsUser {
+  id: string;
+  displayName: string;
+  email: string;
+  avatarUrl: string | null;
+  city: string | null;
+  createdAt: string;
+  lastActiveAt: string | null;
+  clubs: number;
+  posts: number;
+  isAdmin: boolean;
+  suspendedAt: string | null;
+  suspendedReason: string | null;
+  deleted: boolean;
+}
+
+export interface OpsClub {
+  id: string;
+  name: string;
+  slug: string;
+  city: string | null;
+  visibility: 'public' | 'private';
+  owner: UserSummary & { email: string };
+  members: number;
+  posts7d: number;
+  createdAt: string;
+  deletedAt: string | null;
+  shutdownReason: string | null;
+}
+
+export interface OpsAction {
+  id: string;
+  admin: string;
+  action: string;
+  targetType: string;
+  targetId: string;
+  targetName: string | null;
+  note: string | null;
+  createdAt: string;
+}

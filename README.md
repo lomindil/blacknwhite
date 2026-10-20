@@ -52,6 +52,8 @@ scripts/stop.sh             # stops web, API and Docker services (data is kept)
 
 Open http://localhost:3000 and use **Developer sign-in** with any seeded email, e.g. `meera@example.com` (organizer), `karthik@example.com` (a reader who is behind on chapters, to see spoiler gating) or `admin@example.com` (moderation). Emails land in Mailpit at http://localhost:8025.
 
+**Admin portal:** http://localhost:3000/ops (unlisted). Default sign-in `ops@bookclub.local` / `ChangeMe-ops-2026` — set `OPS_EMAIL` and `OPS_PASSWORD` in `apps/api/.env` to change it.
+
 To turn on Google sign-in, create an OAuth client (redirect URI `http://localhost:3000/auth/google/callback`) and set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `apps/api/.env`.
 
 | Command | What it does |

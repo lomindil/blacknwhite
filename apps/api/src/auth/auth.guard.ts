@@ -3,6 +3,7 @@ import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { AppError, forbidden, unauthenticated } from '../common/errors';
 import { AuthUser, IS_ADMIN, IS_PUBLIC } from '../common/http';
+import { ActivityService } from '../core/activity.service';
 import { PrismaService } from '../core/prisma.service';
 import { SessionService } from './session.service';
 
@@ -18,11 +19,14 @@ export class AuthGuard implements CanActivate {
     private readonly reflector: Reflector,
     private readonly sessions: SessionService,
     private readonly prisma: PrismaService,
+    private readonly activity: ActivityService,
   ) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
     if (ctx.getType() !== 'http') return true;
     const req = ctx.switchToHttp().getRequest<Request & { user?: AuthUser; csrf?: string }>();
+    // The admin portal has its own sessions, CSRF and guard (src/ops).
+    if (req.path.startsWith('/ops/')) return true;
     const targets = [ctx.getHandler(), ctx.getClass()];
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC, targets);
     const adminOnly = this.reflector.getAllAndOverride<boolean>(IS_ADMIN, targets);
@@ -32,7 +36,10 @@ export class AuthGuard implements CanActivate {
       const session = await this.sessions.get(sid);
       if (session) {
         const user = await this.prisma.user.findUnique({ where: { id: session.userId } });
-        if (user && !user.deletedAt) {
+        if (user?.suspendedAt) {
+          // Deactivated from the admin portal: end this session.
+          void this.sessions.destroy(sid, user.id);
+        } else if (user && !user.deletedAt) {
           req.user = {
             id: user.id,
             email: user.email,
@@ -44,6 +51,7 @@ export class AuthGuard implements CanActivate {
           };
           req.csrf = session.csrf;
           void this.sessions.touch(sid, user.id);
+          void this.activity.touch(user.id).catch(() => undefined);
         }
       }
     }

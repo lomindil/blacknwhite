@@ -15,6 +15,8 @@ import { EventsModule } from './events/events.module';
 import { ImportsModule } from './imports/imports.module';
 import { JobsModule } from './jobs/jobs.module';
 import { MediaModule } from './media/media.module';
+import { BlogModule } from './blog/blog.module';
+import { OpsModule } from './ops/ops.module';
 import { RealtimeModule } from './realtime/realtime.gateway';
 import { SafetyModule } from './safety/safety.module';
 import { UsersModule } from './users/users.module';
@@ -49,6 +51,8 @@ export const featureModules = [
   BookstoresModule,
   SafetyModule,
   MediaModule,
+  BlogModule,
+  OpsModule,
 ];
 
 @Module({})

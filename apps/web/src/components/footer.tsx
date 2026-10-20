@@ -11,6 +11,7 @@ const COLUMNS = [
       { href: '/books', label: 'Books' },
       { href: '/bookstores', label: 'Bookstores' },
       { href: '/cities', label: 'Cities' },
+      { href: '/blog', label: 'Blog' },
     ],
   },
   {
@@ -19,11 +20,13 @@ const COLUMNS = [
       { href: '/clubs/new', label: 'Start a club' },
       { href: '/events/new', label: 'Host a meetup' },
       { href: '/me/import', label: 'Import from Goodreads' },
+      { href: '/blog/new', label: 'Write for the blog' },
     ],
   },
   {
     title: 'About',
     links: [
+      { href: '/about', label: 'About us' },
       { href: '/terms', label: 'Terms of use' },
       { href: '/privacy', label: 'Privacy policy' },
       { href: '/terms#grievance', label: 'Grievance officer' },

@@ -25,8 +25,12 @@ import { DiscussionModule } from '../discussion/discussion.module';
 import { DiscussionService } from '../discussion/discussion.service';
 import { EventsModule } from '../events/events.module';
 import { EventsService } from '../events/events.service';
+import { BlogModule, BlogService } from '../blog/blog.module';
+import { StorageService } from '../core/storage.service';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 
-@Module({ imports: [CoreModule, AuthModule, BooksModule, ClubsModule, DiscussionModule, EventsModule] })
+@Module({ imports: [CoreModule, AuthModule, BooksModule, ClubsModule, DiscussionModule, EventsModule, BlogModule] })
 class SeedModule {}
 
 const DAY = 86400000;
@@ -408,6 +412,87 @@ async function main() {
   for (const r of readers.slice(0, 5)) {
     await prisma.eventRsvp.create({ data: { eventId: firstEvent!.id, userId: r.id, status: 'going' } });
   }
+
+  // ---------- Community blog ----------
+  await resetLimits();
+  const blog = app.get(BlogService);
+  const storage = app.get(StorageService);
+  const coverFrom = async (owner: AuthUser, file: string) => {
+    const buf = readFileSync(path.resolve(__dirname, '../../../web/public/images/landing', file));
+    const stored = await storage.saveImage(buf);
+    return prisma.media.create({ data: { ownerId: owner.id, ...stored } });
+  };
+  const list = await blog.create(users.meera, {
+    title: 'Ten Indian novels for your book club’s next pick',
+    excerpt: 'Big books, small books, translations and a few modern classics that always get a club talking.',
+    tags: ['reading list', 'indian fiction'],
+    coverMediaId: (await coverFrom(users.meera, 'place-bookstore.jpg')).id,
+    publish: true,
+    body: `Every few months our club argues about what to read next. Here are the ten books that have sparked the best conversations — chosen for discussion, not just for being good.
+
+## For clubs that like a big, sweeping read
+
+1. **A Suitable Boy** by Vikram Seth — long, yes, but a club can live in it for a season.
+2. **Sea of Poppies** by Amitav Ghosh — the language alone is worth a meetup.
+3. **Ponniyin Selvan** by Kalki Krishnamurthy — read it in Tamil or in translation; split by volume.
+
+## For a single month
+
+4. **The God of Small Things** by Arundhati Roy
+5. **Interpreter of Maladies** by Jhumpa Lahiri — stories, so late joiners can still catch up.
+6. **The White Tiger** by Aravind Adiga
+
+## Translations worth the hype
+
+7. **Tomb of Sand** by Geetanjali Shree, translated by Daisy Rockwell
+8. **Heart Lamp** by Banu Mushtaq, translated by Deepa Bhasthi
+9. **Samskara** by U. R. Ananthamurthy
+10. **Chemmeen** by Thakazhi Sivasankara Pillai
+
+> Pick something nobody has read yet. The best discussions happen when everyone arrives with the same questions.
+
+What would you add? Tell us on your club’s board.`,
+  });
+  const howto = await blog.create(users.arjun, {
+    title: 'How we run a monsoon book club in Mumbai',
+    tags: ['club stories', 'mumbai', 'organizers'],
+    coverMediaId: (await coverFrom(users.arjun, 'hero-cafe.jpg')).id,
+    publish: true,
+    body: `We started with six friends and a WhatsApp group. Two years later we’re forty-odd readers who meet every other Saturday in Fort. A few things that made it work:
+
+## Read on a schedule, not a deadline
+
+We split every book into weekly chunks. Nobody has to finish the night before, and the weekly threads mean people who are behind don’t get spoiled.
+
+## Rotate the host
+
+Every meetup has a different host who brings three questions. It keeps the conversation fresh — and nobody burns out.
+
+## Make it easy to come back
+
+> The members who drift away rarely leave because of the book. They leave because they missed two meetups and felt lost.
+
+So we keep an archive of every discussion, and a reminder goes out the day before each meetup. Simple, but it doubled our turnout.
+
+If you run a club too, I’d love to hear what works for you.`,
+  });
+  const translation = await blog.create(users.divya, {
+    title: 'Reading Chemmeen in Malayalam and English, side by side',
+    tags: ['malayalam', 'translation'],
+    publish: true,
+    body: `This month our Kochi club tried something new: half of us read *Chemmeen* in the original Malayalam, half in English translation, and we compared notes chapter by chapter.
+
+## What changed in translation
+
+The dialogue lost some of its coastal rhythm, but the story’s heartbreak came through intact. The English readers noticed things the rest of us took for granted — and the reverse was even more true.
+
+## Try it with your club
+
+Pick a book with a good translation, split the club in two, and meet in the middle. It’s the liveliest discussion we’ve had all year.`,
+  });
+  for (const u of [users.arjun, users.karthik, users.divya, users.rohan, ...readers.slice(0, 6)]) await blog.toggleLike(list.id, u);
+  for (const u of [users.meera, users.fatima, users.sahil, ...readers.slice(6, 9)]) await blog.toggleLike(howto.id, u);
+  for (const u of [users.meera, users.ananya, users.karthik]) await blog.toggleLike(translation.id, u);
 
   // ---------- Stats and search ----------
   await books.recomputeStats();

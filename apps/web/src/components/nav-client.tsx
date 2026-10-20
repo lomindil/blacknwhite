@@ -12,6 +12,7 @@ const LINKS = [
   { href: '/events', label: 'Events' },
   { href: '/bookstores', label: 'Bookstores' },
   { href: '/cities', label: 'Cities' },
+  { href: '/blog', label: 'Blog' },
 ];
 
 /** Main navigation with an animated underline on the current section. */

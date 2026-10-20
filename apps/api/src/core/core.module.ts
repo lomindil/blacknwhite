@@ -1,5 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { AccessService } from './access.service';
+import { ActivityService } from './activity.service';
 import { MailerService, WhatsAppService } from './messaging.service';
 import { NotificationsService } from './notifications.service';
 import { PrismaService } from './prisma.service';
@@ -20,6 +21,7 @@ const providers = [
   NotificationsService,
   AccessService,
   StorageService,
+  ActivityService,
 ];
 
 /** Shared infrastructure used by every feature module, in both the API and the worker. */

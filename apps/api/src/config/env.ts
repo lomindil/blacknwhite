@@ -40,6 +40,9 @@ const schema = z.object({
   UPLOAD_DIR: z.string().default('uploads'),
   /** Public URL prefix for photos. The web app proxies /media to the API. */
   MEDIA_BASE_URL: z.string().default('/media'),
+  /** Admin portal sign-in (separate from Google sign-in). Change both before deploying. */
+  OPS_EMAIL: z.string().default('ops@bookclub.local'),
+  OPS_PASSWORD: z.string().default('ChangeMe-ops-2026'),
 });
 
 export type Env = z.infer<typeof schema>;
@@ -51,6 +54,9 @@ export function env(): Env {
     cached = schema.parse(process.env);
     if (cached.NODE_ENV === 'production' && cached.DEV_LOGIN) {
       throw new Error('DEV_LOGIN must not be enabled in production');
+    }
+    if (cached.NODE_ENV === 'production' && cached.OPS_PASSWORD === 'ChangeMe-ops-2026') {
+      throw new Error('Set OPS_PASSWORD (the admin portal password) before running in production');
     }
   }
   return cached;

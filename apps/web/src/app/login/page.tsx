@@ -9,6 +9,7 @@ const ERRORS: Record<string, string> = {
   oauth_denied: 'Sign-in was cancelled.',
   oauth_state: 'Your sign-in expired. Please try again.',
   oauth_email: 'Your Google account email is not verified.',
+  account_suspended: 'This account has been deactivated. Contact support if you think this is a mistake.',
 };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string; next?: string }> }) {

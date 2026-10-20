@@ -29,8 +29,12 @@ import { DiscussionModule } from './discussion/discussion.module';
 import { DiscussionService } from './discussion/discussion.service';
 import { DmsModule } from './dms/dms.module';
 import { DmsService } from './dms/dms.service';
+import { AccountService } from './auth/auth.controller';
+import { BlogModule, BlogService } from './blog/blog.module';
+import { OpsModule } from './ops/ops.module';
+import { OpsService } from './ops/ops.module';
 
-@Module({ imports: [CoreModule, AuthModule, BooksModule, ClubsModule, DiscussionModule, DmsModule] })
+@Module({ imports: [CoreModule, AuthModule, BooksModule, ClubsModule, DiscussionModule, DmsModule, BlogModule, OpsModule] })
 class TestModule {}
 
 describe('authorization (integration)', () => {
@@ -244,6 +248,78 @@ describe('authorization (integration)', () => {
       await expect(discussion.board(clubId, users.outsider.id, undefined, 10)).rejects.toMatchObject({ status: 403 });
       await expect(discussion.boardPost(postId, users.outsider.id)).rejects.toMatchObject({ status: 403 });
       await expect(discussion.react(postId, users.outsider, 'like')).rejects.toMatchObject({ status: 403 });
+    });
+  });
+
+  describe('community blog', () => {
+    const post = { title: 'Why we read slowly', body: 'Some thoughts on reading together. '.repeat(30), tags: ['reading'], publish: true };
+
+    it('publishes posts from established accounts and queues new accounts for review', async () => {
+      const blog = app.get(BlogService);
+      const established = await blog.create(users.owner, post);
+      expect(established.status).toBe('published');
+      const fresh = await blog.create(users.fresh, { ...post, title: 'My first post here' });
+      expect(fresh.status).toBe('pending');
+      const listed = await blog.list({ sort: 'latest', limit: 20 });
+      expect(listed.items.map((p) => p.id)).toContain(established.id);
+      expect(listed.items.map((p) => p.id)).not.toContain(fresh.id);
+      await expect(blog.get(fresh.slug, users.early)).rejects.toMatchObject({ status: 404 });
+      await blog.review(fresh.id, 'approve');
+      expect((await blog.get(fresh.slug, users.early)).status).toBe('published');
+    });
+
+    it('keeps drafts private and counts likes', async () => {
+      const blog = app.get(BlogService);
+      const draft = await blog.create(users.owner, { ...post, title: 'Unfinished draft', publish: false });
+      expect(draft.status).toBe('draft');
+      await expect(blog.get(draft.slug, users.early)).rejects.toMatchObject({ status: 404 });
+      const live = await blog.update(draft.id, users.owner, { ...post, title: 'Finished now' });
+      expect(live.status).toBe('published');
+      expect(await blog.toggleLike(live.id, users.early)).toEqual({ liked: true, likeCount: 1 });
+      expect(await blog.toggleLike(live.id, users.early)).toEqual({ liked: false, likeCount: 0 });
+    });
+  });
+
+  describe('admin portal', () => {
+    it('deactivates an account: sessions end and sign-in is refused, until reactivated', async () => {
+      const ops = app.get(OpsService);
+      const accounts = app.get(AccountService);
+      const target = await mkUser('troublemaker');
+      await prisma.userIdentity.create({ data: { userId: target.id, provider: 'dev', providerUserId: target.email } });
+      await ops.suspend('ops@test', target.id, 'Spam');
+      await expect(accounts.findOrCreate('dev', target.email, { email: target.email, name: 'x', picture: null })).rejects.toMatchObject({ code: 'ACCOUNT_SUSPENDED' });
+      await ops.reactivate('ops@test', target.id);
+      expect((await accounts.findOrCreate('dev', target.email, { email: target.email, name: 'x', picture: null })).id).toBe(target.id);
+      const log = await ops.actions();
+      expect(log.map((a) => a.action)).toEqual(expect.arrayContaining(['user.deactivate', 'user.reactivate']));
+    });
+
+    it('shuts a club down and restores it', async () => {
+      const ops = app.get(OpsService);
+      const club = await clubs.create(users.early, { name: 'Club to close', language: 'en', visibility: 'public' });
+      await ops.shutdownClub('ops@test', club.id, 'Repeated spam');
+      await expect(clubs.detail(club.slug, users.early.id)).rejects.toMatchObject({ status: 404 });
+      await ops.restoreClub('ops@test', club.id);
+      expect((await clubs.detail(club.slug, users.early.id)).id).toBe(club.id);
+    });
+
+    it('lists clubs and users with activity counts', async () => {
+      const ops = app.get(OpsService);
+      const clubsPage = await ops.clubs({ status: 'all', limit: 50 });
+      const club = clubsPage.items.find((c) => c.id === clubId)!;
+      expect(club.members).toBeGreaterThan(0);
+      expect(club.posts7d).toBeGreaterThan(0);
+      expect((await ops.clubs({ status: 'active', q: 'Test Club', limit: 10 })).items.length).toBeGreaterThan(0);
+      const usersPage = await ops.users({ status: 'all', q: 'owner', limit: 10 });
+      expect(usersPage.items[0]).toMatchObject({ displayName: 'owner' });
+    });
+
+    it('reports stats', async () => {
+      const stats = await app.get(OpsService).stats();
+      expect(stats.users.total).toBeGreaterThan(5);
+      expect(stats.clubs.total).toBeGreaterThan(0);
+      expect(stats.series.signups).toHaveLength(30);
+      expect(stats.clubs.weeklyActive).toBeGreaterThan(0);
     });
   });
 });

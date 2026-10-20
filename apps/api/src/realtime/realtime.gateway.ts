@@ -65,6 +65,8 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection {
       const sid = cookieValue(socket.handshake.headers.cookie, 'sid');
       const session = sid ? await this.sessions.get(sid) : null;
       if (!session) return next(new Error('unauthenticated'));
+      const user = await this.prisma.user.findUnique({ where: { id: session.userId }, select: { suspendedAt: true, deletedAt: true } });
+      if (!user || user.suspendedAt || user.deletedAt) return next(new Error('unauthenticated'));
       socket.data.userId = session.userId;
       next();
     });
