@@ -11,3 +11,6 @@ Inconsistencies and undecided points across the plan. Resolve each one, update t
 | 5 | **Product name and domain** | Business plan §12 | Still to pick. Repo is named `blacknwhite`. |
 | 6 | **Missing source links** | Business plan §2, §5, §6 | Market figures (NielsenIQ, IMARC, book fairs), the Bookclubs.com fee, and the Amazon affiliate rate were hyperlinked in the PDF; the URLs need to be re-added. |
 | 7 | **Which communities do we launch in, and how do we hand-hold organizers across several cities at once?** | Business plan §7 | With a multi-city launch, a solo founder can't meet every organizer in person. Decide the first shortlist (metros vs. smaller cities with strong scenes) and whether onboarding is remote-first. |
+| 8 | **Google OAuth credentials** | Architecture §4 | Create an OAuth client in Google Cloud Console (redirect URI `http://localhost:3000/auth/google/callback` for dev) and set `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` in `apps/api/.env`. Until then, use dev sign-in. |
+| 9 | **WhatsApp Business account and templates** | Architecture §7.7 | Needs a Meta Business account, a verified number, and approved templates `event_reminder` and `weekly_schedule_nudge`. |
+| 10 | **Amazon Associates and Flipkart affiliate sign-up** | Business plan §6 | Buy links already work; set `AMAZON_ASSOCIATE_TAG` once approved so they earn commission. |

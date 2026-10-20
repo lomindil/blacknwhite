@@ -1,6 +1,6 @@
 # Book Club Platform — Web Architecture
 
-> **Status:** Draft v1 · **Owner:** Aman Chaturvedi · **Last updated:** 2026-10-19
+> **Status:** Phase 1 built for local development · **Owner:** Aman Chaturvedi · **Last updated:** 2026-10-19
 > Companion doc: [Business Plan](business-plan.md) · Change history: [CHANGELOG](../CHANGELOG.md)
 
 ---
@@ -341,9 +341,39 @@ Phase 1 reaches private beta in 16 weeks. The schedule assumes one developer wor
 
 | Weeks | Milestone | Deliverables | Done |
 |---|---|---|---|
-| 1–2 | Foundation | Monorepo, CI/CD, staging on AWS Mumbai, Google sign-in, sessions, onboarding | [ ] |
-| 3–5 | Books and reading | Catalog and search, book pages, buy links, "I'm reading this", Goodreads import | [ ] |
-| 6–9 | Clubs and discussion | Clubs, roles, invites, schedules, polls, spoiler-gated threads, realtime posts | [ ] |
-| 10–12 | Social and events | Club-scoped DMs, events and RSVPs, bookstore directory, notifications, WhatsApp | [ ] |
-| 13–14 | Safety and polish | Reports, blocks, rate limits, privacy policy, account deletion, load tests | [ ] |
+| 1–2 | Foundation | Monorepo, CI/CD, staging on AWS Mumbai, Google sign-in, sessions, onboarding | Built (staging not deployed yet) |
+| 3–5 | Books and reading | Catalog and search, book pages, buy links, "I'm reading this", Goodreads import | Built |
+| 6–9 | Clubs and discussion | Clubs, roles, invites, schedules, polls, spoiler-gated threads, realtime posts | Built |
+| 10–12 | Social and events | Club-scoped DMs, events and RSVPs, bookstore directory, notifications, WhatsApp | Built |
+| 13–14 | Safety and polish | Reports, blocks, rate limits, privacy policy, account deletion, load tests | Built (load tests and legal review pending) |
 | 15–16 | **Private beta** | 10 design-partner clubs across launch communities; fix, measure, prepare the public launch | [ ] |
+
+## 12. Implementation notes
+
+What the code in `apps/` and `packages/` does differently from, or in addition to, the plan above. Keep this section current as the code changes.
+
+**Running it:** see the README. Local services run in Docker on ports 5433 (Postgres), 6380 (Redis), 7700 (Meilisearch) and 1025/8025 (Mailpit, a dev inbox that catches all email).
+
+**Additions not in the original plan**
+
+- **Dev sign-in.** `POST /auth/dev-login` signs in by email without Google, enabled only when `DEV_LOGIN=true` and refused outright in production. It exists so the app is usable before Google OAuth credentials are set up.
+- **Moderation console.** `/admin` (site admins only, set via `ADMIN_EMAILS`) shows the report queue with context and the review queue for user-added books. Endpoints: `GET /v1/admin/reports`, `POST /v1/admin/reports/:id/resolve`, `GET /v1/admin/books/pending`, `POST /v1/admin/books/:id/review`.
+- **Extra tables:** `club_invites` (invite links with expiry and use limits) and `import_jobs` (Goodreads/StoryGraph import progress and unmatched rows). `dm_conversations.pair_key` guarantees one conversation per pair of people. 29 tables in total.
+- **Extra endpoints:** `GET /v1/me/home` (home feed), `GET /v1/cities` and `/v1/cities/:city` (city landing pages), `GET /v1/me/clubs`, `GET /v1/me/bookstores`, `GET /v1/me/export`, `GET /v1/me/blocks`, `GET /v1/events/:id/ics`, `GET /v1/events/:id/rsvps` (host attendance list), `POST /v1/polls/:id/close`, club leave/delete, and invite preview/accept.
+- **Spoiler tags:** `||text||` in posts renders as tap-to-reveal.
+- **Waitlist promotion:** when someone with a seat drops out, the first person on the waitlist is moved in and notified.
+
+**Deviations**
+
+- **Worker runs inside the API in dev** (`RUN_WORKER_IN_API=true`) to save memory. In production run `node dist/worker.js` as its own process from the same image, as planned. The realtime service relays worker events to sockets through Redis pub/sub.
+- **Meilisearch is called over its REST API** rather than through the JS client, so client/server version drift can't break search. Postgres search takes over automatically whenever Meilisearch is down.
+- **Realtime posts are pushed as ids, not content.** Clients refetch over REST, so per-post spoiler gates (`chapter_ref`) apply to live updates too.
+- **Search falls back to Open Library, then Google Books,** when local results are thin; new books are saved into our catalog and de-duplicated by external id, ISBN, and title+author.
+- **Account deletion is immediate** rather than "within 30 days": personal data is cleared at once, posts are kept but anonymised, and owned clubs pass to the next admin.
+
+**Not built yet (Phase 1 gaps)**
+
+- OpenAPI document generation (the API uses shared Zod schemas, but `/docs` isn't published yet).
+- Dockerfiles and the AWS deploy pipeline. CI (typecheck, tests, build) is in `.github/workflows/ci.yml`.
+- Load tests, Sentry/PostHog wiring, and legal review of the terms and privacy templates.
+- WhatsApp message templates must be registered with Meta (`event_reminder`, `weekly_schedule_nudge`). Until credentials are set, messages are logged instead of sent.

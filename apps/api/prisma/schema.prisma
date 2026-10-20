@@ -1,0 +1,662 @@
+// Phase 1 data model. See docs/architecture.md §5.
+// Conventions: UUIDv7 ids, UTC timestamps, soft-deleted user content (deleted_at).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Users ----------
+
+model User {
+  id              String    @id @default(uuid(7)) @db.Uuid
+  displayName     String    @map("display_name")
+  email           String    @unique
+  avatarUrl       String?   @map("avatar_url")
+  city            String?
+  languages       String[]  @default([])
+  genres          String[]  @default([])
+  bio             String?
+  isAdmin         Boolean   @default(false) @map("is_admin")
+  onboardedAt     DateTime? @map("onboarded_at")
+  termsAcceptedAt DateTime? @map("terms_accepted_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
+
+  identities       UserIdentity[]
+  settings         UserSettings?
+  readingStatuses  ReadingStatus[]
+  memberships      ClubMember[]
+  ownedClubs       Club[]           @relation("ClubOwner")
+  threads          Thread[]
+  posts            Post[]
+  dmParticipations DmParticipant[]
+  dmMessages       DmMessage[]
+  rsvps            EventRsvp[]
+  eventsCreated    Event[]
+  notifications    Notification[]
+  reports          Report[]         @relation("Reporter")
+  blocks           Block[]          @relation("Blocker")
+  blockedBy        Block[]          @relation("Blocked")
+  pollVotes        PollVote[]
+  pollsCreated     Poll[]
+  importJobs       ImportJob[]
+  invitesCreated   ClubInvite[]
+  booksAdded       Book[]
+  bookstores       Bookstore[]
+
+  @@index([city])
+  @@map("users")
+}
+
+model UserIdentity {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  provider       String
+  providerUserId String   @map("provider_user_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+  @@map("user_identities")
+}
+
+enum DmPolicy {
+  club_members
+  nobody
+}
+
+model UserSettings {
+  userId          String    @id @map("user_id") @db.Uuid
+  notifyEmail     Boolean   @default(true) @map("notify_email")
+  emailDigest     Boolean   @default(true) @map("email_digest")
+  notifyWhatsapp  Boolean   @default(false) @map("notify_whatsapp")
+  whatsappNumber  String?   @map("whatsapp_number")
+  whatsappOptInAt DateTime? @map("whatsapp_opt_in_at")
+  dmPolicy        DmPolicy  @default(club_members) @map("dm_policy")
+  lastDigestAt    DateTime? @map("last_digest_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+// ---------- Books ----------
+
+enum BookSource {
+  openlibrary
+  google
+  user
+  import
+  seed
+}
+
+enum BookStatus {
+  approved
+  pending
+  rejected
+}
+
+model Book {
+  id            String     @id @default(uuid(7)) @db.Uuid
+  title         String
+  subtitle      String?
+  language      String     @default("en")
+  description   String?
+  coverUrl      String?    @map("cover_url")
+  pageCount     Int?       @map("page_count")
+  chapterCount  Int?       @map("chapter_count")
+  publishedYear Int?       @map("published_year")
+  source        BookSource
+  externalId    String?    @unique @map("external_id")
+  status        BookStatus @default(approved)
+  createdById   String?    @map("created_by_id") @db.Uuid
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  createdBy       User?           @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  editions        BookEdition[]
+  authors         BookAuthor[]
+  links           BookLink[]
+  readingStatuses ReadingStatus[]
+  stats           BookStat[]
+  clubBooks       ClubBook[]
+  currentInClubs  Club[]          @relation("ClubCurrentBook")
+  threads         Thread[]
+  pollOptions     PollOption[]
+
+  @@index([title])
+  @@index([status])
+  @@map("books")
+}
+
+model BookEdition {
+  id        String  @id @default(uuid(7)) @db.Uuid
+  bookId    String  @map("book_id") @db.Uuid
+  isbn13    String? @unique
+  isbn10    String? @unique
+  format    String?
+  publisher String?
+  language  String?
+
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([bookId])
+  @@map("book_editions")
+}
+
+model Author {
+  id         String  @id @default(uuid(7)) @db.Uuid
+  name       String
+  nameNative String? @map("name_native")
+
+  books BookAuthor[]
+
+  @@index([name])
+  @@map("authors")
+}
+
+model BookAuthor {
+  bookId   String @map("book_id") @db.Uuid
+  authorId String @map("author_id") @db.Uuid
+  position Int    @default(0)
+
+  book   Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  author Author @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, authorId])
+  @@index([authorId])
+  @@map("book_authors")
+}
+
+model BookLink {
+  id           String    @id @default(uuid(7)) @db.Uuid
+  bookId       String    @map("book_id") @db.Uuid
+  retailer     String
+  url          String
+  lastPriceInr Int?      @map("last_price_inr")
+  checkedAt    DateTime? @map("checked_at")
+
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([bookId, retailer])
+  @@map("book_links")
+}
+
+enum ReadingStatusValue {
+  want
+  reading
+  read
+}
+
+model ReadingStatus {
+  userId         String             @map("user_id") @db.Uuid
+  bookId         String             @map("book_id") @db.Uuid
+  status         ReadingStatusValue
+  progressPct    Int                @default(0) @map("progress_pct")
+  currentChapter Int                @default(0) @map("current_chapter")
+  startedAt      DateTime?          @map("started_at")
+  finishedAt     DateTime?          @map("finished_at")
+  rating         Int?
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@id([userId, bookId])
+  @@index([bookId, status])
+  @@index([userId, status])
+  @@map("reading_status")
+}
+
+/// Aggregate counters, refreshed every 15 minutes. city = '_all' holds the India-wide total.
+model BookStat {
+  bookId            String   @map("book_id") @db.Uuid
+  city              String
+  readingCount      Int      @default(0) @map("reading_count")
+  clubsReadingCount Int      @default(0) @map("clubs_reading_count")
+  updatedAt         DateTime @default(now()) @map("updated_at")
+
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, city])
+  @@index([city, readingCount])
+  @@map("book_stats")
+}
+
+// ---------- Clubs ----------
+
+enum ClubVisibility {
+  public
+  private
+}
+
+enum ClubRole {
+  owner
+  admin
+  member
+}
+
+model Club {
+  id            String         @id @default(uuid(7)) @db.Uuid
+  name          String
+  slug          String         @unique
+  description   String?
+  city          String?
+  language      String         @default("en")
+  visibility    ClubVisibility @default(public)
+  ownerId       String         @map("owner_id") @db.Uuid
+  currentBookId String?        @map("current_book_id") @db.Uuid
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  deletedAt     DateTime?      @map("deleted_at")
+
+  owner       User         @relation("ClubOwner", fields: [ownerId], references: [id])
+  currentBook Book?        @relation("ClubCurrentBook", fields: [currentBookId], references: [id], onDelete: SetNull)
+  members     ClubMember[]
+  invites     ClubInvite[]
+  clubBooks   ClubBook[]
+  polls       Poll[]
+  threads     Thread[]
+  events      Event[]
+
+  @@index([city, visibility])
+  @@map("clubs")
+}
+
+model ClubMember {
+  clubId   String   @map("club_id") @db.Uuid
+  userId   String   @map("user_id") @db.Uuid
+  role     ClubRole @default(member)
+  joinedAt DateTime @default(now()) @map("joined_at")
+
+  club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([clubId, userId])
+  @@index([userId])
+  @@map("club_members")
+}
+
+model ClubInvite {
+  id          String    @id @default(uuid(7)) @db.Uuid
+  clubId      String    @map("club_id") @db.Uuid
+  code        String    @unique
+  createdById String    @map("created_by_id") @db.Uuid
+  expiresAt   DateTime? @map("expires_at")
+  maxUses     Int?      @map("max_uses")
+  uses        Int       @default(0)
+  revokedAt   DateTime? @map("revoked_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  club      Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  createdBy User @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([clubId])
+  @@map("club_invites")
+}
+
+/// A book a club reads. schedule = { totalChapters, chaptersPerWeek, weeks: [{ week, fromChapter, toChapter, startsOn }] }
+model ClubBook {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  clubId    String    @map("club_id") @db.Uuid
+  bookId    String    @map("book_id") @db.Uuid
+  startsOn  DateTime  @map("starts_on") @db.Date
+  endsOn    DateTime? @map("ends_on") @db.Date
+  schedule  Json?
+  isCurrent Boolean   @default(true) @map("is_current")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  club    Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  book    Book     @relation(fields: [bookId], references: [id])
+  threads Thread[]
+
+  @@index([clubId, isCurrent])
+  @@map("club_books")
+}
+
+// ---------- Polls ----------
+
+enum PollKind {
+  book
+  time
+  general
+}
+
+model Poll {
+  id          String    @id @default(uuid(7)) @db.Uuid
+  clubId      String    @map("club_id") @db.Uuid
+  createdById String    @map("created_by_id") @db.Uuid
+  question    String
+  kind        PollKind  @default(general)
+  closesAt    DateTime? @map("closes_at")
+  closedAt    DateTime? @map("closed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  club      Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  createdBy User         @relation(fields: [createdById], references: [id])
+  options   PollOption[]
+  votes     PollVote[]
+
+  @@index([clubId, createdAt])
+  @@map("polls")
+}
+
+model PollOption {
+  id       String  @id @default(uuid(7)) @db.Uuid
+  pollId   String  @map("poll_id") @db.Uuid
+  label    String
+  bookId   String? @map("book_id") @db.Uuid
+  position Int     @default(0)
+
+  poll  Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  book  Book?      @relation(fields: [bookId], references: [id], onDelete: SetNull)
+  votes PollVote[]
+
+  @@index([pollId])
+  @@map("poll_options")
+}
+
+/// One vote per member per poll (ranked voting comes in Phase 2).
+model PollVote {
+  pollId    String   @map("poll_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  optionId  String   @map("option_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  poll   Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  option PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@id([pollId, userId])
+  @@map("poll_votes")
+}
+
+// ---------- Discussion ----------
+
+model Thread {
+  id           String    @id @default(uuid(7)) @db.Uuid
+  clubId       String    @map("club_id") @db.Uuid
+  bookId       String?   @map("book_id") @db.Uuid
+  clubBookId   String?   @map("club_book_id") @db.Uuid
+  scheduleWeek Int?      @map("schedule_week")
+  title        String
+  /// The chapter a reader must have finished to see this thread. 0 = spoiler-free.
+  chapterGate  Int       @default(0) @map("chapter_gate")
+  authorId     String?   @map("author_id") @db.Uuid
+  isSystem     Boolean   @default(false) @map("is_system")
+  postCount    Int       @default(0) @map("post_count")
+  lastPostAt   DateTime  @default(now()) @map("last_post_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  club     Club      @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  book     Book?     @relation(fields: [bookId], references: [id], onDelete: SetNull)
+  clubBook ClubBook? @relation(fields: [clubBookId], references: [id], onDelete: SetNull)
+  author   User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  posts    Post[]
+
+  @@unique([clubBookId, scheduleWeek])
+  @@index([clubId, lastPostAt])
+  @@map("threads")
+}
+
+model Post {
+  id         String    @id @default(uuid(7)) @db.Uuid
+  threadId   String    @map("thread_id") @db.Uuid
+  authorId   String    @map("author_id") @db.Uuid
+  body       String
+  /// Replies inherit the thread's gate; a higher chapterRef hides the reply until that chapter.
+  chapterRef Int?      @map("chapter_ref")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  editedAt   DateTime? @map("edited_at")
+  deletedAt  DateTime? @map("deleted_at")
+
+  thread Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  author User   @relation(fields: [authorId], references: [id])
+
+  @@index([threadId, id])
+  @@map("posts")
+}
+
+// ---------- Direct messages ----------
+
+model DmConversation {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  /// "<smallerUserId>:<largerUserId>" — one conversation per pair.
+  pairKey       String   @unique @map("pair_key")
+  createdAt     DateTime @default(now()) @map("created_at")
+  lastMessageAt DateTime @default(now()) @map("last_message_at")
+
+  participants DmParticipant[]
+  messages     DmMessage[]
+
+  @@map("dm_conversations")
+}
+
+model DmParticipant {
+  conversationId String    @map("conversation_id") @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  lastReadAt     DateTime? @map("last_read_at")
+
+  conversation DmConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+  @@index([userId])
+  @@map("dm_participants")
+}
+
+model DmMessage {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  conversationId String    @map("conversation_id") @db.Uuid
+  senderId       String    @map("sender_id") @db.Uuid
+  body           String
+  createdAt      DateTime  @default(now()) @map("created_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  conversation DmConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User           @relation(fields: [senderId], references: [id])
+
+  @@index([conversationId, id])
+  @@map("dm_messages")
+}
+
+// ---------- Events ----------
+
+enum EventMode {
+  online
+  in_person
+}
+
+enum RsvpStatus {
+  going
+  maybe
+  no
+  waitlist
+}
+
+model Event {
+  id              String    @id @default(uuid(7)) @db.Uuid
+  clubId          String?   @map("club_id") @db.Uuid
+  bookstoreId     String?   @map("bookstore_id") @db.Uuid
+  createdById     String    @map("created_by_id") @db.Uuid
+  title           String
+  description     String?
+  startsAt        DateTime  @map("starts_at")
+  endsAt          DateTime? @map("ends_at")
+  mode            EventMode
+  venueName       String?   @map("venue_name")
+  /// Neighbourhood text; no coordinates in Phase 1.
+  area            String?
+  address         String?
+  addressRsvpOnly Boolean   @default(true) @map("address_rsvp_only")
+  city            String?
+  meetingUrl      String?   @map("meeting_url")
+  capacity        Int?
+  cancelledAt     DateTime? @map("cancelled_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  club      Club?       @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  bookstore Bookstore?  @relation(fields: [bookstoreId], references: [id], onDelete: Cascade)
+  createdBy User        @relation(fields: [createdById], references: [id])
+  rsvps     EventRsvp[]
+
+  @@index([city, startsAt])
+  @@index([clubId, startsAt])
+  @@index([bookstoreId, startsAt])
+  @@map("events")
+}
+
+model EventRsvp {
+  eventId   String     @map("event_id") @db.Uuid
+  userId    String     @map("user_id") @db.Uuid
+  status    RsvpStatus
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, userId])
+  @@index([eventId, status, createdAt])
+  @@map("event_rsvps")
+}
+
+// ---------- Bookstores ----------
+
+model Bookstore {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  name        String
+  slug        String   @unique
+  description String?
+  address     String
+  area        String?
+  city        String
+  /// Public businesses, so coordinates are fine.
+  lat         Float?
+  lng         Float?
+  phone       String?
+  website     String?
+  hours       String?
+  languages   String[] @default([])
+  secondhand  Boolean  @default(false)
+  claimedById String?  @map("claimed_by_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  claimedBy User?   @relation(fields: [claimedById], references: [id], onDelete: SetNull)
+  events    Event[]
+
+  @@index([city, area])
+  @@map("bookstores")
+}
+
+// ---------- Notifications ----------
+
+model Notification {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  type      String
+  payload   Json
+  readAt    DateTime? @map("read_at")
+  emailedAt DateTime? @map("emailed_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, id])
+  @@map("notifications")
+}
+
+// ---------- Trust and safety ----------
+
+enum ReportTarget {
+  post
+  thread
+  dm_message
+  user
+  club
+  event
+  book
+}
+
+enum ReportStatus {
+  open
+  actioned
+  dismissed
+}
+
+model Report {
+  id           String       @id @default(uuid(7)) @db.Uuid
+  reporterId   String       @map("reporter_id") @db.Uuid
+  targetType   ReportTarget @map("target_type")
+  targetId     String       @map("target_id") @db.Uuid
+  reason       String
+  details      String?
+  status       ReportStatus @default(open)
+  resolvedById String?      @map("resolved_by_id") @db.Uuid
+  resolvedAt   DateTime?    @map("resolved_at")
+  resolution   String?
+  createdAt    DateTime     @default(now()) @map("created_at")
+
+  reporter User @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@map("reports")
+}
+
+model Block {
+  blockerId String   @map("blocker_id") @db.Uuid
+  blockedId String   @map("blocked_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  blocker User @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
+  @@map("blocks")
+}
+
+// ---------- Imports ----------
+
+enum ImportSource {
+  goodreads
+  storygraph
+}
+
+enum ImportStatus {
+  queued
+  processing
+  done
+  failed
+}
+
+model ImportJob {
+  id         String       @id @default(uuid(7)) @db.Uuid
+  userId     String       @map("user_id") @db.Uuid
+  source     ImportSource
+  status     ImportStatus @default(queued)
+  total      Int          @default(0)
+  matched    Int          @default(0)
+  created    Int          @default(0)
+  unmatched  Json?
+  error      String?
+  createdAt  DateTime     @default(now()) @map("created_at")
+  finishedAt DateTime?    @map("finished_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("import_jobs")
+}

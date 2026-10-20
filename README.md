@@ -4,7 +4,7 @@ India's home for reading together — a web platform where readers create and ru
 
 > *Goodreads tracks what you read. We help you read together — with your club, in your city, in your language.*
 
-**Stage:** pre-build planning · **Launch:** multiple cities with active reading communities · **Owner:** Aman Chaturvedi
+**Stage:** Phase 1 built, running locally · **Launch:** multiple cities with active reading communities · **Owner:** Aman Chaturvedi
 
 ## Documents
 
@@ -25,6 +25,54 @@ The original PDFs (dated 2026-10-19) are kept in the repo root for reference. **
 - **Not tied to one city:** launches wherever a thriving reading community exists; metros likely lead early traction.
 - **Gate 1:** 100 active clubs and 20 paying organizers, then expand into more communities.
 - **North-star metric:** weekly active clubs.
+
+## Running it locally
+
+Needs Node 22+, pnpm 9 (`npm i -g pnpm@9`) and Docker.
+
+```bash
+pnpm install
+pnpm services:up                     # Postgres :5433, Redis :6380, Meilisearch :7700, Mailpit :8025
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env.local
+pnpm --filter @bnw/shared build
+pnpm db:migrate                      # create the tables
+pnpm db:seed                         # sample clubs, books, events, bookstores (wipes data)
+pnpm dev                             # API on :4000 (with worker), web on :3000
+```
+
+After the first setup, day to day you only need two commands:
+
+```bash
+scripts/start.sh            # Docker services → migrations → API → web; prints URLs when ready
+scripts/stop.sh             # stops web, API and Docker services (data is kept)
+```
+
+`start.sh` options: `--prod` (production builds, lighter on memory), `--seed` (reload sample data), `--no-web`. `stop.sh` options: `--keep-services`, `--down` (remove containers), `--purge` (also delete the local database; asks first). Logs are in `.run/`.
+
+Open http://localhost:3000 and use **Developer sign-in** with any seeded email, e.g. `meera@example.com` (organizer), `karthik@example.com` (a reader who is behind on chapters, to see spoiler gating) or `admin@example.com` (moderation). Emails land in Mailpit at http://localhost:8025.
+
+To turn on Google sign-in, create an OAuth client (redirect URI `http://localhost:3000/auth/google/callback`) and set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `apps/api/.env`.
+
+| Command | What it does |
+|---|---|
+| `pnpm dev` | Run API and web in watch mode |
+| `pnpm build` | Production builds of all packages |
+| `pnpm typecheck` | Typecheck everything |
+| `pnpm --filter @bnw/api test` | Unit tests and authorization integration tests (uses a `bnw_test` database: `docker exec blacknwhite-postgres-1 createdb -U bnw bnw_test`) |
+| `pnpm --filter @bnw/api search:reindex` | Rebuild Meilisearch indexes from Postgres |
+| `node apps/api/dist/worker.js` | Standalone background worker (production) |
+
+### Code layout
+
+```
+apps/api/            NestJS API, background worker, Prisma schema and migrations, seed
+  src/core/          Prisma, Redis, queues, search, notifications, realtime, access checks
+  src/<feature>/     auth, users, books, imports, clubs, discussion, dms, events, bookstores, safety
+apps/web/            Next.js web app (proxies /api and /auth to the API)
+packages/shared/     Zod request schemas, response types, cities and languages
+docs/                Business plan, architecture, open questions
+```
 
 ## Keeping the docs updated
 

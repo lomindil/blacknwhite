@@ -1,0 +1,66 @@
+'use client';
+
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { FormError } from '@/components/actions';
+import { CityPicker, GenrePicker, LanguagePicker } from '@/components/profile-fields';
+import { call, errorMessage } from '@/lib/client-api';
+
+export function OnboardingForm(props: { displayName: string; city: string | null; languages: string[]; genres: string[] }) {
+  const router = useRouter();
+  const [displayName, setDisplayName] = useState(props.displayName);
+  const [city, setCity] = useState<string | null>(props.city);
+  const [languages, setLanguages] = useState<string[]>(props.languages.length ? props.languages : ['en']);
+  const [genres, setGenres] = useState<string[]>(props.genres);
+  const [consent, setConsent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  return (
+    <form
+      className="space-y-8"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        if (!consent) return setError('Please accept the terms and privacy policy to continue.');
+        setBusy(true);
+        setError(null);
+        try {
+          await call('/v1/me', { method: 'PATCH', body: { displayName, city, languages, genres, acceptTerms: true } });
+          router.push('/');
+          router.refresh();
+        } catch (err) {
+          setError(errorMessage(err));
+          setBusy(false);
+        }
+      }}
+    >
+      <div>
+        <label className="label" htmlFor="name">Your name</label>
+        <input id="name" className="input" value={displayName} onChange={(e) => setDisplayName(e.target.value)} maxLength={60} required />
+      </div>
+      <div>
+        <label className="label" htmlFor="city">City</label>
+        <CityPicker value={city} onChange={setCity} />
+      </div>
+      <div>
+        <span className="label">Languages you read in</span>
+        <LanguagePicker value={languages} onChange={setLanguages} />
+      </div>
+      <div>
+        <span className="label">Favourite genres</span>
+        <GenrePicker value={genres} onChange={setGenres} />
+      </div>
+      <label className="flex items-start gap-3 border border-line p-4 text-sm">
+        <input type="checkbox" className="mt-1" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+        <span>
+          I agree to the <Link href="/terms" className="link" target="_blank">terms of use</Link> and{' '}
+          <Link href="/privacy" className="link" target="_blank">privacy policy</Link>. We store your name, email, photo, city and
+          reading activity to run the service. You can export or delete your data any time in Settings.
+        </span>
+      </label>
+      <FormError error={error} />
+      <button className="btn px-8 py-3" disabled={busy}>Continue</button>
+    </form>
+  );
+}
