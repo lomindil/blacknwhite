@@ -6,7 +6,7 @@ import { CatalogService } from '../books/catalog.service';
 import { ClubsModule } from '../clubs/clubs.module';
 import { ClubsService } from '../clubs/clubs.service';
 import { MailerService, WhatsAppService } from '../core/messaging.service';
-import { DeliverJob } from '../core/notifications.service';
+import { DeliverJob, NotificationsService } from '../core/notifications.service';
 import { PrismaService } from '../core/prisma.service';
 import { bullConnection, QueueName, QueueService } from '../core/queue.service';
 import { SearchService } from '../core/search.service';
@@ -34,6 +34,7 @@ export class JobsRunner implements OnModuleInit, OnModuleDestroy {
     private readonly whatsapp: WhatsAppService,
     private readonly books: BooksService,
     private readonly catalog: CatalogService,
+    private readonly notifications: NotificationsService,
     private readonly clubs: ClubsService,
     private readonly events: EventsService,
     private readonly imports: ImportsService,
@@ -68,6 +69,7 @@ export class JobsRunner implements OnModuleInit, OnModuleDestroy {
     await cron.upsertJobScheduler('digest', { pattern: '30 2 * * *' }, { name: 'digest' });
     await cron.upsertJobScheduler('schedule-nudges', { pattern: '30 3 * * *' }, { name: 'schedule-nudges' });
     await cron.upsertJobScheduler('media-cleanup', { pattern: '0 22 * * *' }, { name: 'media-cleanup' });
+    await cron.upsertJobScheduler('notifications-cleanup', { pattern: '30 22 * * *' }, { name: 'notifications-cleanup' });
 
     await this.search.setup();
     await this.books.recomputeStats().catch((e) => this.logger.warn(`Initial stats failed: ${e.message}`));
@@ -83,6 +85,7 @@ export class JobsRunner implements OnModuleInit, OnModuleDestroy {
     if (name === 'digest') return this.sendDigests();
     if (name === 'schedule-nudges') return this.clubs.sendScheduleNudges();
     if (name === 'media-cleanup') return this.media.cleanupUnattached();
+    if (name === 'notifications-cleanup') return this.notifications.cleanup();
   }
 
   private async deliver(job: DeliverJob) {

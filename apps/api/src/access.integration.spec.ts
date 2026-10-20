@@ -35,6 +35,7 @@ import { OpsModule } from './ops/ops.module';
 import { OpsService } from './ops/ops.module';
 import { RecommendationsModule } from './recommendations/recommendations.module';
 import { RecommendationsService } from './recommendations/recommendations.service';
+import { NotificationsService } from './core/notifications.service';
 
 @Module({ imports: [CoreModule, AuthModule, BooksModule, ClubsModule, DiscussionModule, DmsModule, BlogModule, OpsModule, RecommendationsModule] })
 class TestModule {}
@@ -365,6 +366,41 @@ describe('authorization (integration)', () => {
       expect(r.clubs[0].club.id).toBe(hindi.id);
       expect(r.clubs[0].reasons).toContain('Discusses in Hindi');
       expect(r.books.concat(r.starters).some((b) => b.book.id === loved)).toBe(false);
+    });
+  });
+
+  describe('notifications', () => {
+    it('merges replies in one thread into a single unread notification', async () => {
+      const intro = await weekThread(0);
+      const mine = { userId: users.owner.id, groupKey: `thread:${intro.id}` };
+      await prisma.notification.updateMany({ where: { userId: users.owner.id }, data: { readAt: new Date() } });
+      await discussion.createPost(intro.id, users.owner, { body: 'Welcome, everyone!' });
+      await discussion.createPost(intro.id, users.fresh, { body: 'Hello from me' });
+      await discussion.createPost(intro.id, users.early, { body: 'Excited to start' });
+      await discussion.createPost(intro.id, users.fresh, { body: 'One more thing' });
+
+      const unread = await prisma.notification.findMany({ where: { ...mine, readAt: null } });
+      expect(unread).toHaveLength(1);
+      const payload = unread[0].payload as { title: string; actorCount: number };
+      expect(payload.actorCount).toBe(2);
+      expect(payload.title).toBe(`fresh and early replied in "${intro.title}"`);
+
+      // Once read, the next reply starts a new notification.
+      await prisma.notification.updateMany({ where: mine, data: { readAt: new Date() } });
+      await discussion.createPost(intro.id, users.early, { body: 'And another' });
+      const after = await prisma.notification.findMany({ where: { ...mine, readAt: null } });
+      expect(after).toHaveLength(1);
+      expect((after[0].payload as { title: string }).title).toBe(`early replied in "${intro.title}"`);
+    });
+
+    it('deletes old read notifications and keeps recent ones', async () => {
+      const old = new Date(Date.now() - 100 * 86400000);
+      const stale = await prisma.notification.create({ data: { userId: users.owner.id, type: 'test', payload: {}, readAt: old, createdAt: old } });
+      const oldUnread = await prisma.notification.create({ data: { userId: users.owner.id, type: 'test', payload: {}, createdAt: old } });
+      const fresh = await prisma.notification.create({ data: { userId: users.owner.id, type: 'test', payload: {}, readAt: new Date() } });
+      await app.get(NotificationsService).cleanup();
+      const left = await prisma.notification.findMany({ where: { id: { in: [stale.id, oldUnread.id, fresh.id] } } });
+      expect(left.map((n) => n.id).sort()).toEqual([oldUnread.id, fresh.id].sort());
     });
   });
 });

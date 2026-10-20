@@ -227,6 +227,7 @@ export class DiscussionService {
         title: `${user.displayName} replied in "${thread.title}"`,
         body: chapterRef ? `Mentions chapter ${chapterRef}` : input.body.slice(0, 140),
         url: `/clubs/${club.slug}/threads/${threadId}`,
+        group: { key: `thread:${threadId}`, actor: { id: user.id, name: user.displayName }, title: (who) => `${who} replied in "${thread.title}"` },
       },
       {},
       user.id,
@@ -430,14 +431,26 @@ export class DiscussionService {
     const excerpt = parent.chapterRef ? `Mentions chapter ${parent.chapterRef}` : body.slice(0, 140);
     await this.notifications.notify(
       [parent.authorId],
-      { type: 'reply', title: `${user.displayName} replied to your ${parent.parentId ? 'comment' : 'post'} in ${club.name}`, body: excerpt, url },
+      {
+        type: 'reply',
+        title: `${user.displayName} replied to your ${parent.parentId ? 'comment' : 'post'} in ${club.name}`,
+        body: excerpt,
+        url,
+        group: { key: `reply:${parent.id}`, actor: { id: user.id, name: user.displayName }, title: (who) => `${who} replied to your ${parent.parentId ? 'comment' : 'post'} in ${club.name}` },
+      },
       {},
       user.id,
     );
     if (root && root.authorId !== parent.authorId) {
       await this.notifications.notify(
         [root.authorId],
-        { type: 'reply', title: `${user.displayName} commented on your post${root.title ? ` “${root.title}”` : ''}`, body: excerpt, url },
+        {
+          type: 'reply',
+          title: `${user.displayName} commented on your post${root.title ? ` “${root.title}”` : ''}`,
+          body: excerpt,
+          url,
+          group: { key: `post:${root.id}`, actor: { id: user.id, name: user.displayName }, title: (who) => `${who} commented on your post${root.title ? ` “${root.title}”` : ''}` },
+        },
         {},
         user.id,
       );

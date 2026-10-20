@@ -383,6 +383,7 @@ What the code in `apps/` and `packages/` does differently from, or in addition t
   3. Open Library, then Google Books, when we find fewer than 5 results. New books found this way are saved into our catalogue.
 
   Because external search results have no description, `CatalogService.enrich` fills empty fields from the Open Library work record and then Google Books, and stamps `books.enriched_at`. It runs as a `search/enrich` job when a book is saved, and inline (with a timeout) the first time an unenriched book is opened.
+- **Grouped notifications.** `notify()` takes an optional `group` (key, actor, title template). Unread notifications with the same `group_key` are merged by deleting the old row and inserting a new one with the actor list (`payload.actors`, `payload.actorCount`). A partial unique index guarantees one unread row per person per group. Groups: `thread:<id>`, `reply:<postId>`, `post:<rootId>`, `club-join:<clubId>`. A daily `notifications-cleanup` job deletes read rows after 90 days and unread rows after 365.
 - **Waitlist promotion:** when someone with a seat drops out, the first person on the waitlist is moved in and notified.
 
 **Deviations**
@@ -393,7 +394,7 @@ What the code in `apps/` and `packages/` does differently from, or in addition t
 - **Search falls back to Open Library, then Google Books,** when local results are thin; new books are saved into our catalog and de-duplicated by external id, ISBN, and title+author.
 - **Account deletion is immediate** rather than "within 30 days": personal data is cleared at once, posts are kept but anonymised, and owned clubs pass to the next admin.
 
-**Not built yet (Phase 1 gaps)**
+**Not built yet (Phase 1 gaps)** — tracked with priorities in [production-checklist.md](production-checklist.md).
 
 - OpenAPI document generation (the API uses shared Zod schemas, but `/docs` isn't published yet).
 - Dockerfiles and the AWS deploy pipeline. CI (typecheck, tests, build) is in `.github/workflows/ci.yml`.

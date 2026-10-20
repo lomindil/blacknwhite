@@ -13,6 +13,7 @@ India's home for reading together — a web platform where readers create and ru
 | [Business Plan](docs/business-plan.md) | Problem, product, users, competition, pricing, go-to-market, roadmap, financials, risks, metrics |
 | [Web Architecture](docs/architecture.md) | Phase 1 scope, system design, tech stack, auth, data model, API, key features, security, infra, build plan |
 | [Open Questions](docs/open-questions.md) | Inconsistencies and undecided points to resolve |
+| [Before Production](docs/production-checklist.md) | Work that must be done before real users arrive, with a storage estimate |
 | [CHANGELOG](CHANGELOG.md) | Dated log of every change to the plan and why |
 
 The original PDFs (dated 2026-10-19) are kept in the repo root for reference. **The Markdown files are now the source of truth**; the PDFs are not updated.

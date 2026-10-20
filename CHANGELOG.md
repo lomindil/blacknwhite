@@ -13,6 +13,17 @@ Format:
 
 ---
 
+## 2026-10-20 — Grouped notifications, pre-production checklist
+
+**Docs:** production-checklist (new), architecture (§12), README
+**Change:**
+- **Grouped notifications.** Replies in the same thread, replies to the same comment, comments on the same post, and new members joining a club now merge into one unread notification per person: "Arjun, Meera and 3 others replied in Week 2". Each update replaces the old row with a new one, so it moves to the top of Activity. The unread badge doesn't count it twice. Once read, the next reply starts a fresh notification.
+- **Notification cleanup.** A daily job deletes read notifications after 90 days and unread ones after a year.
+- Schema: `notifications.group_key` with a partial unique index (one unread notification per person per group), and an index on `created_at` (migration `notification_groups`).
+- **Pre-production checklist.** Added `docs/production-checklist.md`, which lists the work required before launch (R2 photo storage, deploy pipeline, admin portal hardening, legal review and more) and a storage estimate.
+
+**Why:** The storage review found that each post created up to 100 notification rows, which were never deleted. At 10k monthly active readers, notifications would have been about 60% of the database (~8.5 GB in the first year). They were also noisy for readers. With grouping and cleanup, the first-year estimate drops from about 14 GB to about 6.5 GB.
+
 ## 2026-10-20 — Books page, book details, quiz clean-up
 
 **Docs:** architecture (§12)

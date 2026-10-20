@@ -62,7 +62,10 @@ export function LiveBadges({ initialNotifications, initialMessages }: { initialN
 
   useEffect(() => {
     const s = getSocket();
-    const onNote = () => setNotes((n) => n + 1);
+    // A grouped notification that replaces an unread one doesn't add to the count.
+    const onNote = (n?: { replaces?: string | null }) => {
+      if (!n?.replaces) setNotes((c) => c + 1);
+    };
     const onDm = () => {
       if (!window.location.pathname.startsWith('/messages')) setMsgs((n) => n + 1);
     };

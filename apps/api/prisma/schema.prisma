@@ -602,6 +602,9 @@ model Notification {
   userId    String    @map("user_id") @db.Uuid
   type      String
   payload   Json
+  /// Unread notifications with the same key are merged ("Arjun and 3 others replied…").
+  /// A partial unique index (user_id, group_key) WHERE read_at IS NULL is added in SQL.
+  groupKey  String?   @map("group_key")
   readAt    DateTime? @map("read_at")
   emailedAt DateTime? @map("emailed_at")
   createdAt DateTime  @default(now()) @map("created_at")
@@ -609,6 +612,7 @@ model Notification {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, id])
+  @@index([createdAt])
   @@map("notifications")
 }
 

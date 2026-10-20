@@ -10,7 +10,28 @@ export interface NotificationContent {
   body?: string;
   url?: string;
   data?: Record<string, unknown>;
+  /**
+   * Merge into the recipient's unread notification with the same key instead of adding a row:
+   * "Arjun, Meera and 3 others replied in Week 2". `title` receives the names, already joined.
+   */
+  group?: { key: string; actor: { id: string; name: string }; title: (who: string) => string };
 }
+
+/** Names kept in a grouped notification's payload, newest first. */
+const MAX_ACTORS = 20;
+
+/** "Arjun", "Arjun and Meera", "Arjun, Meera and 3 others". */
+export function joinActors(names: string[], total: number): string {
+  if (total <= 1) return names[0];
+  if (total === 2) return `${names[0]} and ${names[1]}`;
+  const others = total - 2;
+  return `${names[0]}, ${names[1]} and ${others} other${others === 1 ? '' : 's'}`;
+}
+
+type Actor = { id: string; name: string };
+
+/** Read notifications are deleted after this; unread ones after a year. */
+export const NOTIFICATION_RETENTION_DAYS = { read: 90, unread: 365 };
 
 export interface DeliveryChannels {
   /** Send an email right away (reminders, invites). Everything else goes into the daily digest. */
@@ -50,15 +71,36 @@ export class NotificationsService {
     });
     if (!active.length) return;
 
-    const payload = {
-      title: content.title,
-      body: content.body,
-      url: content.url,
-      ...(content.data ?? {}),
-    } as Prisma.InputJsonValue;
+    const base = { body: content.body, url: content.url, ...(content.data ?? {}) };
+    const group = content.group;
+    // Unread notifications in the same group are replaced by one merged row (new id, so it moves to the top).
+    const previous = group
+      ? await this.prisma.notification.findMany({
+          where: { userId: { in: active.map((u) => u.id) }, groupKey: group.key, readAt: null },
+        })
+      : [];
+    const prevByUser = new Map(previous.map((n) => [n.userId, n]));
 
-    const rows = await this.prisma.notification.createManyAndReturn({
-      data: active.map((u) => ({ userId: u.id, type: content.type, payload })),
+    const data = active.map((u) => {
+      if (!group) return { userId: u.id, type: content.type, payload: { title: content.title, ...base } as Prisma.InputJsonValue };
+      const old = prevByUser.get(u.id)?.payload as { actors?: Actor[]; actorCount?: number } | undefined;
+      const oldActors = old?.actors ?? [];
+      const isNew = !oldActors.some((a) => a.id === group.actor.id);
+      const actors = [group.actor, ...oldActors.filter((a) => a.id !== group.actor.id)].slice(0, MAX_ACTORS);
+      const actorCount = (old?.actorCount ?? oldActors.length) + (isNew ? 1 : 0);
+      const who = joinActors(actors.map((a) => a.name), actorCount);
+      return {
+        userId: u.id,
+        type: content.type,
+        groupKey: group.key,
+        payload: { title: group.title(who), ...base, actors, actorCount } as Prisma.InputJsonValue,
+      };
+    });
+
+    const rows = await this.prisma.$transaction(async (tx) => {
+      if (previous.length) await tx.notification.deleteMany({ where: { id: { in: previous.map((n) => n.id) } } });
+      // skipDuplicates: if a concurrent post already wrote the merged row, keep that one.
+      return tx.notification.createManyAndReturn({ data, skipDuplicates: true });
     });
     for (const n of rows) {
       this.realtime.toUser(n.userId, 'notification', {
@@ -67,6 +109,8 @@ export class NotificationsService {
         payload: n.payload,
         readAt: null,
         createdAt: n.createdAt.toISOString(),
+        // Lets the client keep its unread badge steady when a grouped notification is updated.
+        replaces: prevByUser.get(n.userId)?.id ?? null,
       });
     }
 
@@ -89,5 +133,19 @@ export class NotificationsService {
         });
       }
     }
+  }
+
+  /** Deletes read notifications after 90 days and unread ones after a year. Runs daily. */
+  async cleanup(): Promise<number> {
+    const day = 86400_000;
+    const { count } = await this.prisma.notification.deleteMany({
+      where: {
+        OR: [
+          { readAt: { not: null }, createdAt: { lt: new Date(Date.now() - NOTIFICATION_RETENTION_DAYS.read * day) } },
+          { createdAt: { lt: new Date(Date.now() - NOTIFICATION_RETENTION_DAYS.unread * day) } },
+        ],
+      },
+    });
+    return count;
   }
 }

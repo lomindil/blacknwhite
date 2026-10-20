@@ -211,6 +211,7 @@ export class ClubsService {
       type: 'club_join',
       title: `${user.displayName} joined ${club.name}`,
       url: `/clubs/${club.slug}/members`,
+      group: { key: `club-join:${clubId}`, actor: { id: user.id, name: user.displayName }, title: (who) => `${who} joined ${club.name}` },
     });
   }
 
