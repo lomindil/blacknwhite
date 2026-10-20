@@ -25,7 +25,7 @@ export function BookCover({ book, size = 'md' }: { book: Pick<BookSummary, 'titl
   const dims = { sm: 'w-12 h-[72px] text-[7px] rounded-md', md: 'w-24 h-36 text-[10px] rounded-lg', lg: 'w-40 h-60 text-sm rounded-xl' }[size];
   if (book.coverUrl) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={book.coverUrl} alt="" className={`${dims} shrink-0 border border-line object-cover shadow-card`} />;
+    return <img src={book.coverUrl} alt="" className={`${dims} shrink-0 border border-line bg-sand object-cover shadow-card`} loading="lazy" />;
   }
   const tone = COVER_TONES[hash(book.title) % COVER_TONES.length];
   return (

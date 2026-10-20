@@ -46,6 +46,9 @@ export default async function BookPage({ params }: Props) {
             {book.publishedYear && <span className="chip">{book.publishedYear}</span>}
             {book.chapterCount && <span className="chip">{book.chapterCount} chapters</span>}
             {book.pageCount && <span className="chip">{book.pageCount} pages</span>}
+            {book.genres.map((g) => (
+              <Link key={g} href={`/books?genre=${encodeURIComponent(g)}`} className="chip border-sage-200 bg-sage-50 text-sage-700 hover:border-sage-400">{g}</Link>
+            ))}
           </div>
           {(local || national || allStats.clubsReadingCount > 0) && (
             <div className="mt-6 rounded-r-xl border-l-4 border-sage-300 bg-sage-50 py-3 pl-4 pr-4">

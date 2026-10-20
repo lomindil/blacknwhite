@@ -1,6 +1,6 @@
 # Book Club Platform — Web Architecture
 
-> **Status:** Phase 1 built for local development · **Owner:** Aman Chaturvedi · **Last updated:** 2026-10-19
+> **Status:** Phase 1 built for local development · **Owner:** Aman Chaturvedi · **Last updated:** 2026-10-20
 > Companion doc: [Business Plan](business-plan.md) · Change history: [CHANGELOG](../CHANGELOG.md)
 
 ---
@@ -367,6 +367,22 @@ What the code in `apps/` and `packages/` does differently from, or in addition t
 - **Reactions and comment threads.** Posts and comments take 👍/❤️ reactions (`post_reactions`, toggled via `POST /v1/posts/:id/reactions`). Comments nest to any depth via `parent_id`; `root_id` points at the top-level post so `GET /v1/board-posts/:id` loads a whole thread in one query. The feed returns comment counts only.
 - **Photo uploads.** `POST /v1/media` accepts one image (≤10 MB), re-encodes it with sharp to WebP (max 1600px edge, camera orientation applied), which drops all EXIF metadata including GPS — consistent with "no precise location". Board posts attach up to 4 by id. Files live in `UPLOAD_DIR` (default `apps/api/uploads`) and are served at `MEDIA_BASE_URL` (`/media`); `StorageService` is the single place to switch to Cloudflare R2 for production. A daily job removes uploads never attached to a post.
 - **Book archive.** Threads for earlier books stay listed under Book discussion (`?book=<bookId>`) and remain open for posting; spoiler gates still apply until the reader marks the book finished.
+- **Recommendations and the "get matched" quiz.** `/discover/quiz` asks seven questions: reading level, genres, languages, books they loved (added to the "read" shelf), goals, club format and pace, and book length. Answers are stored in `reading_profiles`; genres and languages stay on `users`. `GET /v1/me/recommendations` returns clubs, books and (for new or occasional readers) short "starter" books, each with plain-language reasons. Scoring is rule-based and works without the quiz. It uses:
+  - shelves and ratings, including Goodreads imports;
+  - the books of every club the reader belongs to, current and past;
+  - "readers who liked X also read Y" (co-reading over `reading_status`);
+  - same-author matches and city or India-wide popularity (`book_stats`);
+  - for clubs: city or online versus preferred format, language, the current book's genres, overlap with the reader's want-to-read and read books, pace versus chapters per week, activity in the last 14 days, and descriptions that welcome new readers.
+
+  Books already on a shelf or being read in the reader's clubs are excluded by title, so other editions don't slip through. `books.genres` uses the shared genre list: it is set from Open Library subjects and Google categories on lookup, and backfilled with `pnpm --filter @bnw/api genres:backfill`. Endpoints: `GET/PUT /v1/me/reading-profile`, `GET /v1/me/recommendations`. New accounts go from onboarding into the quiz, which can be skipped; the home page leads with "Let's find your first book club" until the reader has a club, a book or a profile.
+- **Books page and enrichment.** `GET /v1/books` browses the catalogue ordered by readers, then clubs, then title. It filters by `genre` and `language`, and with `q` it ranks results through the normal search path. On each page it hides extra editions that share a title and first author.
+
+  Search (`/v1/books/search` and `?q=`) works in three tiers:
+  1. Meilisearch, which is typo-tolerant and covers title, subtitle, authors in English and native script, and ISBNs.
+  2. Postgres `ILIKE` when Meilisearch is down.
+  3. Open Library, then Google Books, when we find fewer than 5 results. New books found this way are saved into our catalogue.
+
+  Because external search results have no description, `CatalogService.enrich` fills empty fields from the Open Library work record and then Google Books, and stamps `books.enriched_at`. It runs as a `search/enrich` job when a book is saved, and inline (with a timeout) the first time an unenriched book is opened.
 - **Waitlist promotion:** when someone with a seat drops out, the first person on the waitlist is moved in and notified.
 
 **Deviations**

@@ -13,6 +13,7 @@ import { AuthModule } from '../auth/auth.module';
 import { BooksModule } from '../books/books.controller';
 import { BooksService } from '../books/books.service';
 import { createBook } from '../books/book-factory';
+import { SEED_DESCRIPTIONS, SEED_GENRES } from '../books/genres';
 import { ClubsModule } from '../clubs/clubs.module';
 import { ClubsService } from '../clubs/clubs.service';
 import { PollsService } from '../clubs/polls.service';
@@ -20,6 +21,7 @@ import { AuthUser } from '../common/http';
 import { CoreModule } from '../core/core.module';
 import { PrismaService } from '../core/prisma.service';
 import { RedisService } from '../core/redis.service';
+import { QueueService } from '../core/queue.service';
 import { SearchService } from '../core/search.service';
 import { DiscussionModule } from '../discussion/discussion.module';
 import { DiscussionService } from '../discussion/discussion.service';
@@ -122,6 +124,16 @@ async function main() {
     });
     users[p.key] = { id: u.id, email, displayName: u.displayName, isAdmin: u.isAdmin, city: u.city, createdAt: u.createdAt, sessionId: 'seed' };
   }
+  // A brand-new account: not onboarded, no clubs, no books — for trying the first-run experience.
+  await prisma.user.create({
+    data: {
+      email: 'newreader@example.com',
+      displayName: 'Nisha Rao',
+      identities: { create: { provider: 'dev', providerUserId: 'newreader@example.com' } },
+      settings: { create: {} },
+    },
+  });
+
   // Extra readers so aggregate counts cross the public threshold of 5.
   const readers: AuthUser[] = [];
   const readerCities = ['bengaluru', 'bengaluru', 'bengaluru', 'bengaluru', 'bengaluru', 'bengaluru', 'bengaluru', 'mumbai', 'mumbai', 'delhi', 'chennai', 'kolkata'];
@@ -153,6 +165,8 @@ async function main() {
       language: 'language' in b ? b.language : 'en',
       publishedYear: b.year,
       chapterCount: b.chapters,
+      genres: SEED_GENRES[b.title] ?? [],
+      description: SEED_DESCRIPTIONS[b.title] ?? null,
       source: 'seed',
     });
   }
@@ -497,11 +511,15 @@ Pick a book with a good translation, split the club in two, and meet in the midd
   // ---------- Stats and search ----------
   await books.recomputeStats();
   await app.get(SearchService).reindexAll();
+  // Descriptions, page counts and covers come from Open Library in the background (the worker runs them).
+  const queue = app.get(QueueService);
+  for (const b of await prisma.book.findMany({ select: { id: true } })) await queue.add('search', 'enrich', { id: b.id }, { jobId: `enrich-${b.id}` });
   await prisma.notification.deleteMany({});
   await resetLimits();
 
   console.log('\nSeed complete. Sign in on the login page with any of these emails (dev login):');
   for (const p of PEOPLE) console.log(`  ${p.key}@example.com  — ${p.name}, ${p.city}${'admin' in p ? ' (admin)' : ''}`);
+  console.log('  newreader@example.com  — Nisha Rao, a brand-new empty account (goes through onboarding)');
   await app.close();
 }
 

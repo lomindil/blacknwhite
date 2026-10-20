@@ -14,6 +14,7 @@ export interface NewBook {
   chapterCount?: number | null;
   publishedYear?: number | null;
   publisher?: string | null;
+  genres?: string[];
   isbn13s?: string[];
   isbn10s?: string[];
   source: BookSource;
@@ -68,6 +69,7 @@ export async function createBook(db: Db, d: NewBook): Promise<string> {
       pageCount: d.pageCount ?? null,
       chapterCount: d.chapterCount ?? null,
       publishedYear: d.publishedYear ?? null,
+      genres: d.genres ?? [],
       source: d.source,
       externalId: d.externalId ?? null,
       status: d.status ?? 'approved',

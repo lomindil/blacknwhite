@@ -13,7 +13,9 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "seed": "nest build && node dist/scripts/seed.js",
-    "search:reindex": "node dist/scripts/reindex.js"
+    "search:reindex": "node dist/scripts/reindex.js",
+    "genres:backfill": "nest build && node dist/scripts/backfill-genres.js",
+    "books:enrich": "nest build && node dist/scripts/enrich-books.js"
   },
   "dependencies": {
     "@bnw/shared": "workspace:*",

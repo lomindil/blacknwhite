@@ -13,6 +13,36 @@ Format:
 
 ---
 
+## 2026-10-20 — Books page, book details, quiz clean-up
+
+**Docs:** architecture (§12)
+**Change:**
+- **Books page.** It now lists the catalogue straight away, most-read first, with genre and language filters and pages of 20. Each book is a full-width row showing cover, year, language, pages, a short description, genres, reader and club counts, and "Want to read" (or the reader's shelf status). Search results use the same rows. New endpoint: `GET /v1/books?q=&genre=&language=&page=`.
+- **Book details.** Open Library's search results carry no description, so books found through search showed little detail. Each such book is now enriched in the background from its Open Library work record, falling back to Google Books: description, page count, cover, year and genres. Only empty fields are filled. A book that hasn't been enriched yet is enriched when someone first opens it, waiting at most 3.5 seconds. `pnpm --filter @bnw/api books:enrich` does the same for existing books, and the seed queues it. The sample catalogue also gained hand-written descriptions for books those sources don't describe well. Schema: `books.enriched_at` (migration `book_enrichment`).
+- **Book page** shows genres, which link to the filtered Books page.
+- **Onboarding** asks only name, city and consent. Genres and languages are asked once, in the quiz that follows.
+- **User menu** has a single "Reading preferences" entry, which opens the For you page; the quiz is retaken from there.
+- **For you page.** The second book section is called "More books for you" and uses full-width rows.
+- **Home page** no longer has a "Books for you" panel.
+
+**Why:** User feedback. Questions were asked twice, the menu had duplicate entries, the Books page was empty until you searched, and books found through search had almost no details.
+
+## 2026-10-20 — Recommendations and the "get matched" quiz
+
+**Docs:** architecture (§12), README
+**Change:**
+- Added personalised recommendations of clubs to join and books to read, each with the reasons behind it. They take into account:
+  - an optional seven-question quiz (reading level, genres, languages, books you loved, goals, in person or online, pace, book length);
+  - everything already known about the reader: shelves and ratings (including Goodreads imports), the books of their clubs, readers with similar taste, their city and their languages.
+- New readers also get short "starter" books.
+- Onboarding now leads into the quiz, which can be skipped. The home page greets brand-new accounts with "Let's find your first book club" and shows picks to everyone.
+- There is a new **For you** page (`/discover`), linked in the nav, and the quiz can be retaken at any time (`/discover/quiz`).
+- Books now carry genres. These are mapped from Open Library and Google subjects on lookup, and a backfill script fills them in for existing books.
+- Schema: `books.genres`, `reading_profiles` (migration `recommendations`).
+- The seed adds an empty account, `newreader@example.com`, for trying the first-run experience.
+
+**Why:** People who sign up need help choosing a first club or book, especially those who haven't read much recently. Readers who already have a history shouldn't have to start from scratch.
+
 ## 2026-10-20 — About page, community blog, admin portal
 
 **Docs:** architecture (§12), README, open-questions

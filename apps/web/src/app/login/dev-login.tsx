@@ -44,7 +44,7 @@ export function DevLoginForm({ next }: { next?: string }) {
       <button className="btn-ghost w-full" disabled={busy}>
         Sign in without Google
       </button>
-      <p className="mt-2 text-xs text-muted">Seeded accounts: meera, arjun, fatima, karthik, ananya, rohan, divya, sahil, admin @example.com</p>
+      <p className="mt-2 text-xs text-muted">Seeded accounts: meera, arjun, fatima, karthik, ananya, rohan, divya, sahil, admin @example.com — or <strong className="font-medium text-ink">newreader@example.com</strong> for a brand-new account.</p>
       <FormError error={error} />
     </form>
   );

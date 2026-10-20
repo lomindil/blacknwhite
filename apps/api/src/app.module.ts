@@ -17,6 +17,7 @@ import { JobsModule } from './jobs/jobs.module';
 import { MediaModule } from './media/media.module';
 import { BlogModule } from './blog/blog.module';
 import { OpsModule } from './ops/ops.module';
+import { RecommendationsModule } from './recommendations/recommendations.module';
 import { RealtimeModule } from './realtime/realtime.gateway';
 import { SafetyModule } from './safety/safety.module';
 import { UsersModule } from './users/users.module';
@@ -53,6 +54,7 @@ export const featureModules = [
   MediaModule,
   BlogModule,
   OpsModule,
+  RecommendationsModule,
 ];
 
 @Module({})

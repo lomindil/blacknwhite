@@ -19,7 +19,8 @@ export function BookPicker({ onPick, placeholder = 'Search for a book…' }: { o
     const t = setTimeout(async () => {
       setLoading(true);
       try {
-        setResults(await call<BookSummary[]>(`/v1/books/search?q=${encodeURIComponent(q.trim())}&limit=8`));
+        const found = await call<BookSummary[]>(`/v1/books/search?q=${encodeURIComponent(q.trim())}&limit=8`);
+        setResults(found.filter((b, i) => found.findIndex((x) => x.id === b.id) === i));
       } finally {
         setLoading(false);
       }

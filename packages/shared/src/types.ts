@@ -61,10 +61,27 @@ export interface BookSummary {
   publishedYear: number | null;
 }
 
+/** A row on the Books page: enough to judge a book without opening it. */
+export interface BookListItem extends BookSummary {
+  description: string | null;
+  genres: string[];
+  pageCount: number | null;
+  /** null below the public threshold. */
+  readingCount: number | null;
+  clubsReading: number;
+}
+
+export interface BookListPage {
+  items: BookListItem[];
+  page: number;
+  hasMore: boolean;
+}
+
 export interface BookDetail extends BookSummary {
   description: string | null;
   pageCount: number | null;
   chapterCount: number | null;
+  genres: string[];
   authorsNative: string[];
   editions: { isbn13: string | null; isbn10: string | null; format: string | null; publisher: string | null }[];
   status: 'approved' | 'pending' | 'rejected';
@@ -440,4 +457,50 @@ export interface OpsAction {
   targetName: string | null;
   note: string | null;
   createdAt: string;
+}
+
+// ---------- Recommendations ----------
+
+export interface ReadingProfile {
+  readingLevel: 'new' | 'occasional' | 'regular' | 'avid';
+  genres: string[];
+  languages: string[];
+  lovedBooks: BookSummary[];
+  goals: ('club' | 'books' | 'meet_people' | 'online_discussion')[];
+  format: 'in_person' | 'online' | 'either';
+  pace: 'relaxed' | 'steady' | 'fast';
+  length: 'short' | 'medium' | 'long' | 'any';
+  updatedAt: string;
+}
+
+/** What we already know about a reader, used to explain and seed recommendations. */
+export interface ReaderSignals {
+  booksRead: number;
+  booksReading: number;
+  booksWanted: number;
+  rated: number;
+  clubs: number;
+  clubBooks: number;
+  topGenres: string[];
+}
+
+export interface BookRecommendation {
+  book: BookSummary & { genres: string[]; pageCount: number | null; description: string | null };
+  reasons: string[];
+  score: number;
+}
+
+export interface ClubRecommendation {
+  club: ClubSummary & { description: string | null; chaptersPerWeek: number | null; postsLast14d: number };
+  reasons: string[];
+  score: number;
+}
+
+export interface Recommendations {
+  profile: ReadingProfile | null;
+  signals: ReaderSignals;
+  clubs: ClubRecommendation[];
+  books: BookRecommendation[];
+  /** Short, well-liked books for people who haven't read much lately. */
+  starters: BookRecommendation[];
 }

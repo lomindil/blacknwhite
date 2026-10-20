@@ -2,6 +2,7 @@ import { Injectable, Logger, Module, OnModuleDestroy, OnModuleInit } from '@nest
 import { Job, Worker } from 'bullmq';
 import { BooksModule } from '../books/books.controller';
 import { BooksService } from '../books/books.service';
+import { CatalogService } from '../books/catalog.service';
 import { ClubsModule } from '../clubs/clubs.module';
 import { ClubsService } from '../clubs/clubs.service';
 import { MailerService, WhatsAppService } from '../core/messaging.service';
@@ -32,6 +33,7 @@ export class JobsRunner implements OnModuleInit, OnModuleDestroy {
     private readonly mailer: MailerService,
     private readonly whatsapp: WhatsAppService,
     private readonly books: BooksService,
+    private readonly catalog: CatalogService,
     private readonly clubs: ClubsService,
     private readonly events: EventsService,
     private readonly imports: ImportsService,
@@ -42,7 +44,12 @@ export class JobsRunner implements OnModuleInit, OnModuleDestroy {
     const handlers: Record<QueueName, (job: Job) => Promise<unknown>> = {
       imports: (job) => this.imports.process(job.data as ImportJobData),
       deliver: (job) => this.deliver(job.data as DeliverJob),
-      search: (job) => (job.name === 'club' ? this.search.indexClub(job.data.id) : this.search.indexBook(job.data.id)),
+      search: (job) =>
+        job.name === 'club'
+          ? this.search.indexClub(job.data.id)
+          : job.name === 'enrich'
+            ? this.catalog.enrich(job.data.id)
+            : this.search.indexBook(job.data.id),
       reminders: (job) => this.events.sendReminder(job.data as ReminderJob),
       cron: (job) => this.cron(job.name),
     };

@@ -50,7 +50,7 @@ scripts/stop.sh             # stops web, API and Docker services (data is kept)
 
 `start.sh` options: `--prod` (production builds, lighter on memory), `--seed` (reload sample data), `--no-web`. `stop.sh` options: `--keep-services`, `--down` (remove containers), `--purge` (also delete the local database; asks first). Logs are in `.run/`.
 
-Open http://localhost:3000 and use **Developer sign-in** with any seeded email, e.g. `meera@example.com` (organizer), `karthik@example.com` (a reader who is behind on chapters, to see spoiler gating) or `admin@example.com` (moderation). Emails land in Mailpit at http://localhost:8025.
+Open http://localhost:3000 and use **Developer sign-in** with any seeded email, e.g. `meera@example.com` (organizer), `karthik@example.com` (a reader who is behind on chapters, to see spoiler gating) or `admin@example.com` (moderation). Use `newreader@example.com` to see the first-run experience: a brand-new account that goes through onboarding, the "get matched" quiz and recommendations. Emails land in Mailpit at http://localhost:8025.
 
 **Admin portal:** http://localhost:3000/ops (unlisted). Default sign-in `ops@bookclub.local` / `ChangeMe-ops-2026` — set `OPS_EMAIL` and `OPS_PASSWORD` in `apps/api/.env` to change it.
 
@@ -70,7 +70,7 @@ To turn on Google sign-in, create an OAuth client (redirect URI `http://localhos
 ```
 apps/api/            NestJS API, background worker, Prisma schema and migrations, seed
   src/core/          Prisma, Redis, queues, search, notifications, realtime, access checks
-  src/<feature>/     auth, users, books, imports, clubs, discussion, dms, events, bookstores, safety
+  src/<feature>/     auth, users, books, imports, clubs, discussion, dms, events, bookstores, safety, media, blog, ops, recommendations
 apps/web/            Next.js web app (proxies /api and /auth to the API)
 packages/shared/     Zod request schemas, response types, cities and languages
 docs/                Business plan, architecture, open questions

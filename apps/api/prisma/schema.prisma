@@ -46,6 +46,7 @@ model User {
   reactions        PostReaction[]
   blogPosts        BlogPost[]
   blogLikes        BlogLike[]
+  readingProfile   ReadingProfile?
   rsvps            EventRsvp[]
   eventsCreated    Event[]
   notifications    Notification[]
@@ -124,6 +125,10 @@ model Book {
   pageCount     Int?       @map("page_count")
   chapterCount  Int?       @map("chapter_count")
   publishedYear Int?       @map("published_year")
+  /// Our genre list (packages/shared GENRES), from seed data or mapped from Open Library subjects.
+  genres        String[]   @default([])
+  /// When description/pages/subjects were last fetched from Open Library or Google Books.
+  enrichedAt    DateTime?  @map("enriched_at")
   source        BookSource
   externalId    String?    @unique @map("external_id")
   status        BookStatus @default(approved)
@@ -803,4 +808,28 @@ model AdminAction {
 
   @@index([createdAt])
   @@map("admin_actions")
+}
+
+// ---------- Recommendations ----------
+
+/// Answers from the "get matched" quiz. Genres and languages live on the user; everything else here.
+model ReadingProfile {
+  userId       String   @id @map("user_id") @db.Uuid
+  /// new | occasional | regular | avid
+  readingLevel String   @map("reading_level")
+  /// club | books | meet_people | online_discussion
+  goals        String[] @default([])
+  /// in_person | online | either
+  format       String   @default("either")
+  /// relaxed | steady | fast
+  pace         String   @default("steady")
+  /// short | medium | long | any
+  length       String   @default("any")
+  lovedBookIds String[] @default([]) @map("loved_book_ids")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("reading_profiles")
 }

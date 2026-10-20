@@ -57,6 +57,13 @@ export const devLoginSchema = z.object({
 
 // ---------- Books ----------
 
+export const bookListQuery = z.object({
+  q: z.string().trim().max(200).optional(),
+  language: langCode.optional(),
+  genre: z.string().max(40).optional(),
+  page: z.coerce.number().int().min(1).max(500).default(1),
+});
+
 export const bookSearchQuery = z.object({
   q: z.string().trim().min(1).max(200),
   language: langCode.optional(),
@@ -357,3 +364,23 @@ export const opsListQuery = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(30),
 });
 export const opsBlogReviewSchema = z.object({ decision: z.enum(['approve', 'remove']), note: z.string().trim().max(500).optional() });
+
+// ---------- Recommendations ----------
+
+export const READING_LEVELS = ['new', 'occasional', 'regular', 'avid'] as const;
+export const READING_GOALS = ['club', 'books', 'meet_people', 'online_discussion'] as const;
+export const CLUB_FORMATS = ['in_person', 'online', 'either'] as const;
+export const READING_PACES = ['relaxed', 'steady', 'fast'] as const;
+export const BOOK_LENGTHS = ['short', 'medium', 'long', 'any'] as const;
+
+export const readingProfileSchema = z.object({
+  readingLevel: z.enum(READING_LEVELS),
+  genres: z.array(z.string().max(40)).max(20).default([]),
+  languages: z.array(langCode).min(1).max(10),
+  lovedBookIds: z.array(z.string().uuid()).max(10).default([]),
+  goals: z.array(z.enum(READING_GOALS)).max(4).default([]),
+  format: z.enum(CLUB_FORMATS).default('either'),
+  pace: z.enum(READING_PACES).default('steady'),
+  length: z.enum(BOOK_LENGTHS).default('any'),
+});
+export type ReadingProfileInput = z.infer<typeof readingProfileSchema>;

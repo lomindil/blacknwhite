@@ -18,7 +18,7 @@ const LINKS = [
 /** Main navigation with an animated underline on the current section. */
 export function NavLinks({ className = '', mobile = false, signedIn = false }: { className?: string; mobile?: boolean; signedIn?: boolean }) {
   const pathname = usePathname();
-  const links = signedIn ? [{ href: '/home', label: 'Home' }, ...LINKS] : LINKS;
+  const links = signedIn ? [{ href: '/home', label: 'Home' }, { href: '/discover', label: 'For you' }, ...LINKS] : LINKS;
   return (
     <nav className={`items-center gap-6 text-sm ${className}`} aria-label={mobile ? 'Main mobile' : 'Main'}>
       {links.map((l) => {
@@ -116,6 +116,7 @@ export function UserMenu({ children, isAdmin }: { children: ReactNode; isAdmin: 
       {open && (
         <div className="absolute right-0 mt-3 w-56 origin-top-right animate-pop-in overflow-hidden rounded-2xl border border-line bg-surface py-1.5 shadow-lift">
           <Link href="/home" className={item}>Home</Link>
+          <Link href="/discover" className={item}>Reading preferences</Link>
           <Link href="/me/books" className={item}>My shelves</Link>
           <Link href="/clubs/new" className={item}>Start a club</Link>
           <Link href="/me/import" className={item}>Import from Goodreads</Link>

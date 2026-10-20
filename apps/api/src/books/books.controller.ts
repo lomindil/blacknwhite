@@ -1,4 +1,4 @@
-import { bookSearchQuery, createBookSchema, myBooksQuery, readingStatusSchema } from '@bnw/shared';
+import { bookListQuery, bookSearchQuery, createBookSchema, myBooksQuery, readingStatusSchema } from '@bnw/shared';
 import type { CreateBookInput, ReadingStatusInput } from '@bnw/shared';
 import { Controller, Delete, Get, Module, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common';
 import { z } from 'zod';
@@ -13,6 +13,12 @@ export class BooksController {
     private readonly books: BooksService,
     private readonly redis: RedisService,
   ) {}
+
+  @Public()
+  @Get('books')
+  list(@ZQuery(bookListQuery) q: z.infer<typeof bookListQuery>) {
+    return this.books.list(q);
+  }
 
   @Public()
   @Get('books/search')

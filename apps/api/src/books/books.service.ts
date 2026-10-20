@@ -1,5 +1,7 @@
 import {
   BookDetail,
+  BookListItem,
+  BookListPage,
   BookStats,
   BookSummary,
   BuyLink,
@@ -91,12 +93,71 @@ export class BooksService {
     return results;
   }
 
+  /**
+   * The Books page. With `q`, ranked search results; without, the catalogue browsed by how many
+   * people here read each book. Rows carry description, genres and reader counts.
+   */
+  async list(opts: { q?: string; language?: string; genre?: string; page: number }): Promise<BookListPage> {
+    const size = 20;
+    let ids: string[];
+    let hasMore: boolean;
+    if (opts.q) {
+      const found = await this.searchBooks(opts.q, opts.language, 50);
+      ids = found.map((b) => b.id);
+      hasMore = false;
+    } else {
+      const rows = await this.prisma.book.findMany({
+        where: {
+          status: 'approved',
+          ...(opts.language ? { language: opts.language } : {}),
+          ...(opts.genre ? { genres: { has: opts.genre } } : {}),
+        },
+        select: { id: true },
+        orderBy: [{ readingStatuses: { _count: 'desc' } }, { clubBooks: { _count: 'desc' } }, { title: 'asc' }],
+        skip: (opts.page - 1) * size,
+        take: size + 1,
+      });
+      hasMore = rows.length > size;
+      ids = rows.slice(0, size).map((r) => r.id);
+    }
+    const books = await this.prisma.book.findMany({
+      where: { id: { in: ids } },
+      include: { ...bookInclude, stats: { where: { city: '_all' } } },
+    });
+    const byId = new Map(books.map((b) => [b.id, b]));
+    const seen = new Set<string>();
+    const items: BookListItem[] = [];
+    for (const id of ids) {
+      const b = byId.get(id);
+      if (!b || (opts.q && opts.genre && !b.genres.includes(opts.genre))) continue;
+      // Hide extra editions of a work already listed on this page.
+      const key = `${b.title.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim()}|${b.authors[0]?.author.name.toLowerCase() ?? ''}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const stat = b.stats[0];
+      items.push({
+        ...toBookSummary(b),
+        description: b.description,
+        genres: b.genres,
+        pageCount: b.pageCount,
+        readingCount: stat && stat.readingCount >= MIN_PUBLIC_COUNT ? stat.readingCount : null,
+        clubsReading: stat?.clubsReadingCount ?? 0,
+      });
+    }
+    return { items, page: opts.page, hasMore };
+  }
+
   async get(id: string, user?: AuthUser): Promise<BookDetail> {
-    const b = await this.prisma.book.findUnique({
+    let b = await this.prisma.book.findUnique({
       where: { id },
       include: { ...bookInclude, editions: true },
     });
     if (!b) throw notFound('Book');
+    // First visit to a book we only know from search results: fetch its details (briefly) before showing it.
+    if (!b.enrichedAt && b.source !== 'user' && (!b.description || !b.pageCount)) {
+      const done = await Promise.race([this.catalog.enrich(id), new Promise<false>((r) => setTimeout(() => r(false), 3500))]);
+      if (done) b = (await this.prisma.book.findUnique({ where: { id }, include: { ...bookInclude, editions: true } }))!;
+    }
     if (b.status !== 'approved' && b.createdById !== user?.id && !user?.isAdmin) throw notFound('Book');
     const rs = user
       ? await this.prisma.readingStatus.findUnique({ where: { userId_bookId: { userId: user.id, bookId: id } } })
@@ -106,6 +167,7 @@ export class BooksService {
       description: b.description,
       pageCount: b.pageCount,
       chapterCount: b.chapterCount,
+      genres: b.genres,
       authorsNative: b.authors.map((a) => a.author.nameNative).filter((n): n is string => Boolean(n)),
       editions: b.editions.map((e) => ({ isbn13: e.isbn13, isbn10: e.isbn10, format: e.format, publisher: e.publisher })),
       status: b.status,

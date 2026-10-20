@@ -1,5 +1,7 @@
-import type { HomeFeed } from '@bnw/shared';
+import type { HomeFeed, Recommendations } from '@bnw/shared';
 import Link from 'next/link';
+import { IconSparkle } from '@/components/icons';
+import { RecClubCard } from '@/components/recommendations';
 import { BookCard, BookCover, ClubCard, Empty, EventCard, Section } from '@/components/ui';
 import { cityName, readersLabel } from '@/lib/format';
 import { api, requireMe } from '@/lib/server-api';
@@ -9,15 +11,51 @@ export const metadata = { title: 'Home' };
 /** Signed-in home feed. The landing page at / stays available to everyone. */
 export default async function HomePage() {
   const me = await requireMe('/home');
-  const feed = await api<HomeFeed>('/v1/me/home');
+  const [feed, recs] = await Promise.all([api<HomeFeed>('/v1/me/home'), api<Recommendations>('/v1/me/recommendations')]);
+  const firstName = me.displayName.split(' ')[0];
+  // Nothing to show yet: no clubs, no books, no quiz. Lead with getting matched.
+  const brandNew = !feed.clubs.length && !feed.reading.length && !recs.profile && !recs.signals.booksRead && !recs.signals.booksWanted;
 
   return (
     <div className="grid gap-10 lg:grid-cols-[1fr_20rem]">
       <div>
-        <div className="mb-8">
-          <div className="eyebrow mb-2">{me.city ? cityName(me.city) : 'Welcome back'}</div>
-          <h1 className="h1">Hello, {me.displayName.split(' ')[0]}.</h1>
-        </div>
+        {brandNew ? (
+          <div className="relative mb-10 overflow-hidden rounded-3xl border border-sage-200 bg-sage-50 p-8 sm:p-10">
+            <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 animate-drift rounded-full bg-ochre-100/70 blur-2xl" aria-hidden />
+            <div className="relative animate-fade-up">
+              <div className="eyebrow mb-3">Welcome, {firstName}</div>
+              <h1 className="h1 max-w-xl">Let&apos;s find your first book club.</h1>
+              <p className="mt-3 max-w-xl text-ink/75">
+                Tell us what you like to read — or what you&apos;d like to try — and we&apos;ll match you with clubs and books. It takes
+                about two minutes, and it&apos;s fine if you haven&apos;t read much yet.
+              </p>
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <Link href="/discover/quiz" className="btn px-6 py-3">
+                  <IconSparkle className="h-4 w-4" /> Get matched
+                </Link>
+                <Link href="/clubs" className="btn-ghost px-6 py-3">Browse clubs</Link>
+                <Link href="/me/import" className="text-sm text-sage-800 underline decoration-sage-300 underline-offset-4">
+                  Import from Goodreads
+                </Link>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="mb-8">
+            <div className="eyebrow mb-2">{me.city ? cityName(me.city) : 'Welcome back'}</div>
+            <h1 className="h1">Hello, {firstName}.</h1>
+          </div>
+        )}
+
+        {recs.clubs.length > 0 && !feed.clubs.length && (
+          <Section title="Clubs picked for you" action={<Link href="/discover" className="link text-sm">See all picks</Link>}>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {recs.clubs.slice(0, 4).map((r) => (
+                <RecClubCard key={r.club.id} rec={r} compact />
+              ))}
+            </div>
+          </Section>
+        )}
 
         <Section title="Currently reading" action={<Link href="/me/books" className="link text-sm">All shelves</Link>}>
           {feed.reading.length ? (
@@ -61,11 +99,11 @@ export default async function HomePage() {
           )}
         </Section>
 
-        {feed.suggestedClubs.length > 0 && (
-          <Section title={me.city ? `Clubs in ${cityName(me.city)}` : 'Clubs you might like'}>
+        {recs.clubs.length > 0 && feed.clubs.length > 0 && (
+          <Section title="More clubs for you" action={<Link href="/discover" className="link text-sm">See all picks</Link>}>
             <div className="grid gap-4 sm:grid-cols-2">
-              {feed.suggestedClubs.map((c) => (
-                <ClubCard key={c.id} club={c} />
+              {recs.clubs.slice(0, 2).map((r) => (
+                <RecClubCard key={r.club.id} rec={r} compact />
               ))}
             </div>
           </Section>

@@ -33,8 +33,10 @@ import { AccountService } from './auth/auth.controller';
 import { BlogModule, BlogService } from './blog/blog.module';
 import { OpsModule } from './ops/ops.module';
 import { OpsService } from './ops/ops.module';
+import { RecommendationsModule } from './recommendations/recommendations.module';
+import { RecommendationsService } from './recommendations/recommendations.service';
 
-@Module({ imports: [CoreModule, AuthModule, BooksModule, ClubsModule, DiscussionModule, DmsModule, BlogModule, OpsModule] })
+@Module({ imports: [CoreModule, AuthModule, BooksModule, ClubsModule, DiscussionModule, DmsModule, BlogModule, OpsModule, RecommendationsModule] })
 class TestModule {}
 
 describe('authorization (integration)', () => {
@@ -320,6 +322,49 @@ describe('authorization (integration)', () => {
       expect(stats.clubs.total).toBeGreaterThan(0);
       expect(stats.series.signups).toHaveLength(30);
       expect(stats.clubs.weeklyActive).toBeGreaterThan(0);
+    });
+  });
+
+  describe('recommendations', () => {
+    it('uses shelves and club reads for readers who never took the quiz', async () => {
+      const recs = app.get(RecommendationsService);
+      const lit = await createBook(prisma, { title: 'Shared Taste', authors: ['Someone'], source: 'seed', genres: ['Mystery & thriller'] });
+      await prisma.book.update({ where: { id: bookId }, data: { genres: ['Mystery & thriller'] } });
+      // owner read Test Book and Shared Taste; early (reading Test Book in the club) should get Shared Taste.
+      await books.setStatus(users.owner.id, lit, { status: 'read', rating: 5 });
+      const r = await recs.forUser(users.early.id);
+      expect(r.profile).toBeNull();
+      expect(r.signals.clubs).toBeGreaterThanOrEqual(1);
+      expect(r.signals.topGenres).toContain('Mystery & thriller');
+      const pick = r.books.find((b) => b.book.id === lit);
+      expect(pick).toBeDefined();
+      expect(pick!.reasons.join(' ')).toMatch(/Readers who liked Test Book|mystery/i);
+      // Never recommends what's on their shelf or the club they're in.
+      expect(r.books.some((b) => b.book.id === bookId)).toBe(false);
+      expect(r.clubs.some((c) => c.club.id === clubId)).toBe(false);
+    });
+
+    it('saves quiz answers, shelves loved books and recommends matching clubs to a new reader', async () => {
+      const recs = app.get(RecommendationsService);
+      const newbie = await mkUser('newbie');
+      const loved = await createBook(prisma, { title: 'Loved Once', authors: ['Poet'], source: 'seed', genres: ['Poetry'], pageCount: 120 });
+      const hindi = await clubs.create(users.early, { name: 'Hindi Kavita', language: 'hi', visibility: 'public', city: 'delhi', description: 'New readers welcome' });
+      const profile = await recs.saveProfile(newbie.id, {
+        readingLevel: 'new',
+        genres: ['Poetry'],
+        languages: ['hi'],
+        lovedBookIds: [loved],
+        goals: ['club'],
+        format: 'either',
+        pace: 'relaxed',
+        length: 'short',
+      });
+      expect(profile.lovedBooks.map((b) => b.id)).toEqual([loved]);
+      expect(await prisma.readingStatus.findUnique({ where: { userId_bookId: { userId: newbie.id, bookId: loved } } })).toMatchObject({ status: 'read' });
+      const r = await recs.forUser(newbie.id);
+      expect(r.clubs[0].club.id).toBe(hindi.id);
+      expect(r.clubs[0].reasons).toContain('Discusses in Hindi');
+      expect(r.books.concat(r.starters).some((b) => b.book.id === loved)).toBe(false);
     });
   });
 });
