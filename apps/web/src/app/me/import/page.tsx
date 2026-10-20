@@ -82,8 +82,8 @@ export default function ImportPage() {
                   <span className="chip">{j.status}</span>
                 </div>
                 {(j.status === 'processing' || j.status === 'queued') && (
-                  <div className="mt-3 h-1 bg-soft">
-                    <div className="h-1 bg-ink transition-all" style={{ width: `${j.total ? ((j.matched + j.created) / j.total) * 100 : 5}%` }} />
+                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-sage-50">
+                    <div className="h-1.5 rounded-full bg-sage-600 transition-all" style={{ width: `${j.total ? ((j.matched + j.created) / j.total) * 100 : 5}%` }} />
                   </div>
                 )}
                 {j.status === 'done' && (

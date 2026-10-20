@@ -49,7 +49,7 @@ function Toggle({ on, label, onClick }: { on: boolean; label: string; onClick: (
       type="button"
       onClick={onClick}
       aria-pressed={on}
-      className={`border px-3 py-1.5 text-sm transition ${on ? 'border-ink bg-ink text-paper' : 'border-line hover:border-ink'}`}
+      className={`rounded-full border px-3.5 py-1.5 text-sm transition duration-200 ${on ? 'border-sage-600 bg-sage-50 font-medium text-sage-700' : 'border-line bg-surface hover:border-sage-300'}`}
     >
       {label}
     </button>

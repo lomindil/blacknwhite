@@ -18,7 +18,7 @@ export default async function CitiesPage() {
       {active.length > 0 && (
         <div className="mb-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {active.map((c) => (
-            <Link key={c.city} href={`/cities/${c.city}`} className="card group transition hover:border-ink">
+            <Link key={c.city} href={`/cities/${c.city}`} className="card card-hover group">
               <div className="h3 group-hover:underline">{c.name}</div>
               <div className="mt-1 text-sm text-muted">
                 {c.clubs} club{c.clubs === 1 ? '' : 's'} · {c.bookstores} bookstore{c.bookstores === 1 ? '' : 's'}

@@ -22,7 +22,7 @@ export function ClubTabs({ slug, isAdmin }: { slug: string; isAdmin: boolean }) 
             key={t.href}
             href={t.href}
             aria-current={active ? 'page' : undefined}
-            className={`-mb-px shrink-0 border-b-2 pb-2 ${active ? 'border-ink' : 'border-transparent text-muted hover:text-ink'}`}
+            className={`-mb-px shrink-0 border-b-2 pb-2 ${active ? 'border-sage-600 font-medium text-ink' : 'border-transparent text-muted hover:border-sage-200 hover:text-ink'}`}
           >
             {t.label}
           </Link>

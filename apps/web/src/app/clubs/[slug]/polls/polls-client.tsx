@@ -42,9 +42,9 @@ export function PollCard({ poll, canClose, canSetBook, clubSlug }: { poll: PollI
                     setError(errorMessage(e));
                   }
                 }}
-                className={`relative flex w-full items-center gap-3 overflow-hidden border px-3 py-2 text-left text-sm transition ${mine ? 'border-ink' : 'border-line hover:border-ink'} disabled:cursor-default`}
+                className={`relative flex w-full items-center gap-3 overflow-hidden rounded-xl border px-3 py-2 text-left text-sm transition ${mine ? 'border-sage-600' : 'border-line hover:border-sage-300'} disabled:cursor-default`}
               >
-                {showResults && <span className="absolute inset-y-0 left-0 bg-soft" style={{ width: `${pct}%` }} aria-hidden />}
+                {showResults && <span className="absolute inset-y-0 left-0 bg-sage-50 transition-all duration-700" style={{ width: `${pct}%` }} aria-hidden />}
                 {o.book && <span className="relative"><BookCover book={o.book} size="sm" /></span>}
                 <span className="relative flex-1">
                   {mine && '✓ '}

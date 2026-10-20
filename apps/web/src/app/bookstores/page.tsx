@@ -32,7 +32,7 @@ export default async function BookstoresPage({ searchParams }: { searchParams: P
       {stores.length ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {stores.map((s) => (
-            <Link key={s.id} href={`/bookstores/${s.slug}`} className="card group transition hover:border-ink">
+            <Link key={s.id} href={`/bookstores/${s.slug}`} className="card card-hover group">
               <div className="h3 group-hover:underline">{s.name}</div>
               <div className="mt-1 text-sm text-muted">{[s.area, cityName(s.city)].filter(Boolean).join(', ')}</div>
               <div className="mt-3 flex flex-wrap gap-1">

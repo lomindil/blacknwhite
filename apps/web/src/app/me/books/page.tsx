@@ -26,7 +26,7 @@ export default async function ShelvesPage({ searchParams }: { searchParams: Prom
           <Link
             key={s.key}
             href={`/me/books?shelf=${s.key}`}
-            className={`-mb-px border-b-2 pb-2 ${active === s.key ? 'border-ink' : 'border-transparent text-muted hover:text-ink'}`}
+            className={`-mb-px border-b-2 pb-2 ${active === s.key ? 'border-sage-600 font-medium' : 'border-transparent text-muted hover:border-sage-200 hover:text-ink'}`}
             aria-current={active === s.key ? 'page' : undefined}
           >
             {s.label} <span className="text-muted">{all.filter((i) => i.status === s.key).length}</span>

@@ -13,6 +13,12 @@ Format:
 
 ---
 
+## 2026-10-20 — Visual redesign and new landing page
+
+**Docs:** — (UI only)
+**Change:** Light, warm theme replaces black-and-white: off-white page, white surfaces, deep sage as the brand colour, and muted accents (clay, sky, ochre, plum, rose) per feature area. Automatic dark mode removed. New placeholder logo (open book, two readers) and favicon; the product name lives in `apps/web/src/lib/brand.ts`. One footer for all pages. Landing page rebuilt: new tagline ("Start a book club. Find your people. Read together." — no competitor named), hero listing the club basics, an 8-slide feature carousel (clubs, voting, reading schedules, chat, meetups, city and language, Goodreads import and buying, safety), how-it-works steps, clubs, cities and reader/organizer calls to action. Added motion: scroll reveals, floating hero cards, animated mock UIs, card hover lift — all disabled under reduced-motion.
+**Why:** The site should feel like a warm, production-grade community product, and lead with what clubs can do rather than with competitors.
+
 ## 2026-10-19 — Phase 1 web platform built (local development)
 
 **Docs:** architecture, README, open-questions

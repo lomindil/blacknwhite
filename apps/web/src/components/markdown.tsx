@@ -10,7 +10,7 @@ function Spoiler({ children }: { children: React.ReactNode }) {
     <button
       type="button"
       onClick={() => setShown(true)}
-      className={shown ? 'bg-soft px-1' : 'cursor-pointer select-none bg-ink px-1 text-transparent'}
+      className={shown ? 'rounded bg-plum-50 px-1 transition' : 'cursor-pointer select-none rounded bg-plum-200 px-1 text-transparent transition hover:bg-plum-300'}
       title={shown ? undefined : 'Spoiler — tap to reveal'}
       aria-label={shown ? undefined : 'Hidden spoiler, tap to reveal'}
     >

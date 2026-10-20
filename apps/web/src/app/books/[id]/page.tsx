@@ -48,7 +48,7 @@ export default async function BookPage({ params }: Props) {
             {book.pageCount && <span className="chip">{book.pageCount} pages</span>}
           </div>
           {(local || national || allStats.clubsReadingCount > 0) && (
-            <div className="mt-6 border-l-2 border-ink pl-4">
+            <div className="mt-6 rounded-r-xl border-l-4 border-sage-300 bg-sage-50 py-3 pl-4 pr-4">
               {local && <div className="font-serif text-lg">{local}</div>}
               {national && <div className="text-sm text-muted">{national} across India</div>}
               {allStats.clubsReadingCount > 0 && (

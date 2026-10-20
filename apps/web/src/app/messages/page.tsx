@@ -29,7 +29,7 @@ export default async function MessagesPage() {
                     {c.lastMessage ? `${c.lastMessage.senderId === me.id ? 'You: ' : ''}${c.lastMessage.body}` : ''}
                   </div>
                 </div>
-                {c.unread && <span className="h-2 w-2 shrink-0 rounded-full bg-ink" aria-label="Unread" />}
+                {c.unread && <span className="h-2 w-2 shrink-0 rounded-full bg-clay-600" aria-label="Unread" />}
                 {c.readOnly && <span className="chip">Read-only</span>}
               </Link>
             </li>

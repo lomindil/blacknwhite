@@ -2,36 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Light, warm theme: off-white page, white surfaces, charcoal text, sage as the brand colour. */
 :root {
-  --paper: 250 250 247;
-  --ink: 17 17 17;
-  --muted: 107 107 102;
-  --line: 226 226 220;
-  --soft: 240 240 235;
-  --danger: 185 28 28;
+  --paper: 250 248 243; /* #FAF8F3 page */
+  --surface: 255 255 255; /* cards, header */
+  --sand: 241 236 227; /* footer, alternate bands */
+  --ink: 33 37 41; /* text */
+  --muted: 108 112 118;
+  --line: 230 226 217;
+  --soft: 243 239 231;
+  --danger: 176 60 60;
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --paper: 16 16 15;
-    --ink: 236 236 230;
-    --muted: 150 150 143;
-    --line: 48 48 45;
-    --soft: 30 30 28;
-    --danger: 248 113 113;
-    color-scheme: dark;
-  }
-}
-
-:root[data-theme='dark'] {
-  --paper: 16 16 15;
-  --ink: 236 236 230;
-  --muted: 150 150 143;
-  --line: 48 48 45;
-  --soft: 30 30 28;
-  --danger: 248 113 113;
-  color-scheme: dark;
+html {
+  scroll-behavior: smooth;
 }
 
 html,
@@ -40,45 +25,75 @@ body {
   color: rgb(var(--ink));
 }
 
+body {
+  overflow-x: clip;
+}
+
+::selection {
+  background: #ddeadf;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
 @layer components {
+  /* Full-width band inside the centred page container. */
+  .bleed {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+  }
+
   .btn {
-    @apply inline-flex items-center justify-center gap-2 border border-ink bg-ink px-4 py-2 text-sm font-medium text-paper transition hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40;
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-white shadow-sm transition duration-200 hover:-translate-y-px hover:bg-primary-hover hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-600 active:translate-y-0 disabled:pointer-events-none disabled:opacity-40;
   }
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 border border-line bg-transparent px-4 py-2 text-sm font-medium text-ink transition hover:border-ink disabled:cursor-not-allowed disabled:opacity-40;
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-line bg-surface px-5 py-2.5 text-sm font-medium text-ink transition duration-200 hover:border-sage-300 hover:bg-sage-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-600 disabled:pointer-events-none disabled:opacity-40;
   }
   .btn-sm {
-    @apply px-3 py-1 text-xs;
+    @apply px-3.5 py-1.5 text-xs;
   }
   .btn-danger {
-    @apply border-danger bg-transparent text-danger hover:bg-danger hover:text-paper;
+    @apply border-danger/40 bg-transparent text-danger hover:border-danger hover:bg-danger hover:text-white;
   }
   .input {
-    @apply w-full border border-line bg-paper px-3 py-2 text-sm text-ink placeholder:text-muted focus:border-ink focus:outline-none;
+    @apply w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink transition placeholder:text-muted/70 focus:border-sage-600 focus:outline-none focus:ring-4 focus:ring-sage-100;
   }
   .label {
-    @apply mb-1 block text-xs font-medium uppercase tracking-wider text-muted;
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted;
   }
   .card {
-    @apply border border-line bg-paper p-5;
+    @apply rounded-2xl border border-line/70 bg-surface p-5 shadow-card;
+  }
+  .card-hover {
+    @apply transition duration-300 hover:-translate-y-1 hover:border-sage-200 hover:shadow-lift;
   }
   .eyebrow {
-    @apply text-xs font-medium uppercase tracking-[0.18em] text-muted;
+    @apply text-xs font-semibold uppercase tracking-[0.16em] text-sage-600;
   }
   .h1 {
-    @apply font-serif text-3xl leading-tight sm:text-4xl;
+    @apply font-serif text-3xl font-medium leading-tight tracking-tight sm:text-4xl;
   }
   .h2 {
-    @apply font-serif text-2xl leading-tight;
+    @apply font-serif text-2xl font-medium leading-tight tracking-tight;
   }
   .h3 {
-    @apply font-serif text-lg leading-snug;
+    @apply font-serif text-lg font-medium leading-snug;
   }
   .link {
-    @apply underline decoration-line underline-offset-4 hover:decoration-ink;
+    @apply text-sage-700 underline decoration-sage-300 underline-offset-4 transition hover:decoration-sage-700;
   }
   .chip {
-    @apply inline-flex items-center border border-line px-2 py-0.5 text-xs text-muted;
+    @apply inline-flex items-center rounded-full border border-line bg-surface px-2.5 py-0.5 text-xs text-muted;
   }
   .prose-post {
     @apply max-w-none break-words text-[15px] leading-relaxed;
@@ -87,10 +102,10 @@ body {
     @apply my-2;
   }
   .prose-post a {
-    @apply underline underline-offset-2;
+    @apply text-sage-700 underline underline-offset-2;
   }
   .prose-post blockquote {
-    @apply my-2 border-l-2 border-line pl-3 text-muted;
+    @apply my-2 border-l-2 border-sage-200 pl-3 text-muted;
   }
   .prose-post ul {
     @apply my-2 list-disc pl-5;
@@ -99,6 +114,41 @@ body {
     @apply my-2 list-decimal pl-5;
   }
   .prose-post code {
-    @apply bg-soft px-1 text-[13px];
+    @apply rounded bg-soft px-1 text-[13px];
+  }
+
+  /* Scroll reveal (see components/reveal.tsx). */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition:
+      opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1),
+      transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Dotted paper texture for hero and accent panels. */
+  .dots {
+    background-image: radial-gradient(rgb(61 90 76 / 0.12) 1px, transparent 1px);
+    background-size: 18px 18px;
+  }
+}
+
+/* Used inline by the feature carousel's autoplay progress bar. */
+@keyframes fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
   }
 }

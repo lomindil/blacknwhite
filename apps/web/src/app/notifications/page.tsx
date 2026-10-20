@@ -20,7 +20,7 @@ export default async function NotificationsPage() {
           {page.items.map((n) => {
             const inner = (
               <div className="flex gap-3 py-3">
-                <span className={`mt-2 h-2 w-2 shrink-0 rounded-full ${n.readAt ? 'bg-transparent' : 'bg-ink'}`} aria-label={n.readAt ? undefined : 'Unread'} />
+                <span className={`mt-2 h-2 w-2 shrink-0 rounded-full ${n.readAt ? 'bg-transparent' : 'bg-clay-600'}`} aria-label={n.readAt ? undefined : 'Unread'} />
                 <div className="min-w-0 flex-1">
                   <div className={n.readAt ? 'text-muted' : ''}>{n.payload.title}</div>
                   {n.payload.body && <div className="truncate text-sm text-muted">{n.payload.body}</div>}

@@ -34,7 +34,7 @@ export default async function ClubOverview({ params }: { params: Promise<{ slug:
                   {cb.chaptersPerWeek && ` · ${cb.chaptersPerWeek} chapters a week`}
                 </div>
                 {thisWeek && (
-                  <div className="mt-4 border-l-2 border-ink pl-3">
+                  <div className="mt-4 rounded-r-xl border-l-4 border-ochre-300 bg-ochre-50 py-2 pl-3 pr-4">
                     <div className="eyebrow">This week</div>
                     <div className="font-serif text-lg">Chapters {thisWeek.fromChapter}–{thisWeek.toChapter}</div>
                   </div>

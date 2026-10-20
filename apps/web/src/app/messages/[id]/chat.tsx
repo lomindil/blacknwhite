@@ -56,7 +56,7 @@ export function Chat({ conversationId, meId, initial, readOnly }: { conversation
           const mine = m.senderId === meId;
           return (
             <li key={m.id} className={`group flex flex-col ${mine ? 'items-end' : 'items-start'}`}>
-              <div className={`max-w-[80%] whitespace-pre-wrap break-words px-3 py-2 text-[15px] ${mine ? 'bg-ink text-paper' : 'border border-line'}`}>{m.body}</div>
+              <div className={`max-w-[80%] whitespace-pre-wrap break-words px-3 py-2 text-[15px] ${mine ? 'rounded-2xl rounded-br-md bg-sage-700 text-white' : 'rounded-2xl rounded-bl-md border border-line bg-surface'}`}>{m.body}</div>
               <div className="mt-0.5 flex gap-3 text-[11px] text-muted">
                 <span>{timeAgo(m.createdAt)}</span>
                 {!mine && <ReportButton targetType="dm_message" targetId={m.id} />}

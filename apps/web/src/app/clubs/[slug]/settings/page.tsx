@@ -23,7 +23,7 @@ export default async function ManageClubPage({ params, searchParams }: { params:
   return (
     <div className="max-w-3xl">
       {created && (
-        <div className="mb-8 border border-ink p-4">
+        <div className="mb-8 animate-pop-in rounded-2xl border border-sage-200 bg-sage-50 p-5">
           <div className="h3">Your club is ready.</div>
           <p className="mt-1 text-sm text-muted">Next: pick a book and a weekly schedule, then share an invite link in your WhatsApp group.</p>
         </div>

@@ -6,10 +6,44 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { call } from '@/lib/client-api';
 import { getSocket } from '@/lib/socket';
 
+const LINKS = [
+  { href: '/clubs', label: 'Clubs' },
+  { href: '/books', label: 'Books' },
+  { href: '/events', label: 'Events' },
+  { href: '/bookstores', label: 'Bookstores' },
+  { href: '/cities', label: 'Cities' },
+];
+
+/** Main navigation with an animated underline on the current section. */
+export function NavLinks({ className = '', mobile = false }: { className?: string; mobile?: boolean }) {
+  const pathname = usePathname();
+  return (
+    <nav className={`items-center gap-6 text-sm ${className}`} aria-label={mobile ? 'Main mobile' : 'Main'}>
+      {LINKS.map((l) => {
+        const active = pathname === l.href || pathname.startsWith(`${l.href}/`);
+        return (
+          <Link
+            key={l.href}
+            href={l.href}
+            aria-current={active ? 'page' : undefined}
+            className={`group relative shrink-0 py-2.5 transition ${active ? 'font-medium text-ink' : 'text-muted hover:text-ink'}`}
+          >
+            {l.label}
+            <span
+              className={`absolute inset-x-0 -bottom-px h-0.5 origin-left rounded-full bg-sage-600 transition-transform duration-300 ${active ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}
+              aria-hidden
+            />
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
 function Badge({ n }: { n: number }) {
   if (!n) return null;
   return (
-    <span className="absolute -right-2 -top-1.5 min-w-[16px] rounded-full bg-ink px-1 text-center text-[10px] leading-4 text-paper">
+    <span className="absolute -right-3 -top-1.5 min-w-[18px] animate-pop-in rounded-full bg-clay-600 px-1.5 text-center text-[10px] font-semibold leading-[18px] text-white">
       {n > 99 ? '99+' : n}
     </span>
   );
@@ -71,14 +105,14 @@ export function UserMenu({ children, isAdmin }: { children: ReactNode; isAdmin: 
     return () => document.removeEventListener('click', close);
   }, []);
 
-  const item = 'block px-4 py-2 text-sm hover:bg-soft';
+  const item = 'block px-4 py-2 text-sm transition hover:bg-sage-50 hover:text-sage-700';
   return (
     <div ref={ref} className="relative">
-      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label="Account menu" className="flex">
+      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label="Account menu" className="flex rounded-full ring-2 ring-transparent transition hover:ring-sage-200">
         {children}
       </button>
       {open && (
-        <div className="absolute right-0 mt-2 w-52 border border-line bg-paper py-1 shadow-sm">
+        <div className="absolute right-0 mt-3 w-56 origin-top-right animate-pop-in overflow-hidden rounded-2xl border border-line bg-surface py-1.5 shadow-lift">
           <Link href="/" className={item}>Home</Link>
           <Link href="/me/books" className={item}>My shelves</Link>
           <Link href="/clubs/new" className={item}>Start a club</Link>

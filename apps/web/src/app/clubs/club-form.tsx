@@ -75,7 +75,7 @@ export function ClubForm({ initial, clubId }: { initial: Values; clubId?: string
             ['public', 'Public', 'Listed in search and city pages. Anyone can join.'],
             ['private', 'Private', 'Not listed. Members join with an invite link.'],
           ] as const).map(([val, title, desc]) => (
-            <label key={val} className={`cursor-pointer border p-3 text-sm ${v.visibility === val ? 'border-ink' : 'border-line'}`}>
+            <label key={val} className={`cursor-pointer rounded-xl border p-3 text-sm transition ${v.visibility === val ? 'border-sage-600 bg-sage-50' : 'border-line bg-surface hover:border-sage-300'}`}>
               <input type="radio" name="visibility" className="mr-2" checked={v.visibility === val} onChange={() => set('visibility', val)} />
               <span className="font-medium">{title}</span>
               <span className="mt-1 block text-muted">{desc}</span>
