@@ -37,6 +37,10 @@
 
 ## Legal and compliance
 
+- [ ] **P0 — Trademark check for RedReader** (and the red panda mascot) before printing anything; file if clear.
+- [ ] **P1 — Point redreader.in at production**, with `WEB_ORIGIN`, `MAIL_FROM` (`hello@redreader.in`) and the Google OAuth redirect on the new domain.
+- [ ] **P1 — Final mascot artwork.** The current Red is a hand-drawn SVG placeholder; commission an illustrator for a small set of poses (reading, waving, sleeping on a book, celebrating) and a matching app icon.
+
 - [ ] **P0 — Legal review** of the terms of use and privacy policy templates.
 - [ ] **P0 — Name a grievance officer** and publish their contact details, as the IT Rules require.
 

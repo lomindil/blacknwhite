@@ -13,6 +13,25 @@ Format:
 
 ---
 
+## 2026-11-22 — Name chosen: RedReader, with Red the red panda
+
+**Docs:** business-plan (§1, §12), architecture, README, open-questions (#5 resolved), production-checklist
+**Change:**
+- The product is named **RedReader** (`redreader.in`). Its mascot is **Red**, a red panda, and the tagline is "Join Red on your reading journey."
+- New logo (Red's face on a deep sage tile) and favicon. The wordmark is "Red" in russet and "Reader" in ink.
+- A russet colour scale was added for Red. It's used only for the logo, wordmark, mascot and small highlights; sage stays the main colour for buttons and links.
+- Red appears on:
+  - the landing hero, where Red sits reading on a club card, and the hero pill, which now carries the tagline;
+  - a "Meet Red" section on the landing and About pages;
+  - the welcome card for new readers;
+  - the sign-in page, as a speech bubble;
+  - the 404 page;
+  - the For you page ("Red's picks for you");
+  - the footer.
+- Email sender, the Open Library user agent and the calendar-file ID use the new name. The repo, packages (`@bnw/*`) and database names are unchanged.
+
+**Why:** A memorable, India-friendly name with a mascot gives the brand a face for marketing and in-product moments, which the placeholder name didn't have.
+
 ## 2026-10-20 — Grouped notifications, pre-production checklist
 
 **Docs:** production-checklist (new), architecture (§12), README

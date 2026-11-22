@@ -1,4 +1,6 @@
-# Book Club Platform (working name: blacknwhite)
+# RedReader
+
+*Join Red on your reading journey.* · [redreader.in](https://redreader.in) · repo and code still use the old working name `blacknwhite` / `@bnw`
 
 India's home for reading together — a web platform where readers create and run book clubs, discuss books spoiler-safely, find meetups and bookstores near them, and buy books at the best price.
 

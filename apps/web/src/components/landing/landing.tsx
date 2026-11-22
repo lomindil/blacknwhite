@@ -4,7 +4,10 @@ import { IconArrow, IconCalendar, IconCheck, IconPin, IconVote } from '@/compone
 import { Reveal } from '@/components/reveal';
 import { BookCover, ClubCard } from '@/components/ui';
 import { BRAND } from '@/lib/brand';
+import { LogoMark } from '@/components/logo';
+import { RedMascot } from '@/components/mascot';
 import { FeatureCarousel } from './feature-carousel';
+import { MeetRed } from './meet-red';
 import { Faces } from './mocks';
 
 const BASICS = ['Start & join clubs', 'Vote on books', 'Schedule meetups', 'Track your reading', 'Chat without spoilers'];
@@ -29,12 +32,11 @@ function Hero({ signedIn }: { signedIn: boolean }) {
 
       <div className="relative mx-auto grid max-w-page items-center gap-14 px-4 pb-28 pt-16 sm:pb-36 sm:pt-24 lg:grid-cols-[1.1fr_1fr]">
         <div>
-          <div className="mb-6 inline-flex animate-fade-up items-center gap-2 rounded-full border border-sage-200 bg-white/70 px-3.5 py-1.5 text-xs font-medium text-sage-700 backdrop-blur">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sage-300" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-sage-600" />
+          <div className="mb-6 inline-flex animate-fade-up items-center gap-2 rounded-full border border-russet-100 bg-white/75 py-1 pl-1 pr-3.5 text-xs font-medium text-ink/80 backdrop-blur">
+            <LogoMark size={22} className="rounded-full" />
+            <span>
+              <span className="text-russet-700">{BRAND.tagline.replace(/\.$/, '')}</span> · free for readers
             </span>
-            Book clubs across India · free for readers
           </div>
           <h1 className="font-serif text-[2.6rem] font-medium leading-[1.05] tracking-tight sm:text-6xl lg:text-[4.1rem]">
             <span className="block animate-fade-up [animation-delay:80ms]">Start a book club.</span>
@@ -44,7 +46,7 @@ function Hero({ signedIn }: { signedIn: boolean }) {
               <span className="relative inline-block">
                 together.
                 <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden>
-                  <path d="M3 8c40-6 90-7 194-2" fill="none" stroke="#E3B39E" strokeWidth="5" strokeLinecap="round" strokeDasharray="400" className="animate-draw" />
+                  <path d="M3 8c40-6 90-7 194-2" fill="none" stroke="#E5A185" strokeWidth="5" strokeLinecap="round" strokeDasharray="400" className="animate-draw" />
                 </svg>
               </span>
             </span>
@@ -93,7 +95,9 @@ function HeroCollage() {
       <div aria-hidden>
         {/* this week's reading — compact */}
         <div className="absolute bottom-0 right-[-2%] w-[58%] animate-float sm:right-[-4%]">
-          <div className="flex items-center gap-3 rounded-2xl border border-white bg-white/95 p-3 shadow-lift backdrop-blur">
+          {/* Red, reading along on top of the club card */}
+          <RedMascot size={92} className="absolute -top-[74px] right-5 drop-shadow-sm" />
+          <div className="relative flex items-center gap-3 rounded-2xl border border-white bg-white/95 p-3 shadow-lift backdrop-blur">
             <BookCover book={{ title: 'The God of Small Things', authors: ['Arundhati Roy'], coverUrl: null }} size="sm" />
             <div className="min-w-0 flex-1">
               <div className="truncate text-[13px] font-medium">Sunday Fiction Circle</div>
@@ -281,6 +285,13 @@ export function Landing({ clubs, cities, signedIn = false }: { clubs: ClubSummar
           </div>
         </section>
       )}
+
+      {/* Mascot */}
+      <section className="bleed bg-surface pb-6 pt-4">
+        <div className="mx-auto max-w-page px-4">
+          <MeetRed href={signedIn ? '/discover' : '/login'} cta={signedIn ? 'See what Red picked for you' : BRAND.tagline.replace(/\.$/, '')} />
+        </div>
+      </section>
 
       {/* Readers and organizers */}
       <section className="bleed bg-surface pb-24 pt-4">

@@ -30,7 +30,7 @@ export default async function DiscoverPage({ searchParams }: { searchParams: Pro
     <div>
       <header className="mb-10 grid gap-6 lg:grid-cols-[1fr_22rem] lg:items-end">
         <div className="animate-fade-up">
-          <div className="eyebrow mb-2">For you</div>
+          <div className="eyebrow mb-2 text-russet-700">Red&apos;s picks for you</div>
           <h1 className="h1">{fresh ? `Here's what we found, ${me.displayName.split(' ')[0]}` : 'Picked for you'}</h1>
           <p className="mt-3 max-w-2xl text-muted">
             {used.length

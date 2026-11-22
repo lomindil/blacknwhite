@@ -17,7 +17,7 @@ const schema = z.object({
   MEILI_URL: optional,
   MEILI_KEY: optional,
   SMTP_URL: optional,
-  MAIL_FROM: z.string().default('Book Club <hello@example.com>'),
+  MAIL_FROM: z.string().default('RedReader <hello@redreader.in>'),
   WEB_ORIGIN: z.string().default('http://localhost:3000'),
   GOOGLE_CLIENT_ID: optional,
   GOOGLE_CLIENT_SECRET: optional,

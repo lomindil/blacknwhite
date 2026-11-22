@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { BRAND } from '@/lib/brand';
-import { LogoMark } from './logo';
+import { LogoMark, Wordmark } from './logo';
 
 const COLUMNS = [
   {
@@ -42,9 +42,9 @@ export function Footer() {
         <div>
           <Link href="/" className="inline-flex items-center gap-2.5">
             <LogoMark size={28} />
-            <span className="font-serif text-lg font-medium">{BRAND.name}</span>
+            <Wordmark className="text-lg" />
           </Link>
-          <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted">{BRAND.tagline} Book clubs, meetups and readers across India.</p>
+          <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted">{BRAND.tagline} Book clubs, meetups and readers across India, at {BRAND.domain}.</p>
         </div>
         {COLUMNS.map((col) => (
           <nav key={col.title} aria-label={col.title}>

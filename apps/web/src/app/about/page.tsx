@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { IconArrow, IconBook, IconCalendar, IconChat, IconCheck, IconLanguage, IconLock, IconShield, IconUsers, IconVote } from '@/components/icons';
 import { Reveal } from '@/components/reveal';
+import { MeetRed } from '@/components/landing/meet-red';
 import { BRAND } from '@/lib/brand';
 
 export const metadata: Metadata = {
@@ -101,6 +102,13 @@ export default function AboutPage() {
               So we’re building the place we wanted for our own clubs: one home for the whole life of a club, designed for India from day one.
             </p>
           </Reveal>
+        </div>
+      </section>
+
+      {/* Mascot */}
+      <section className="bleed bg-surface pb-20">
+        <div className="mx-auto max-w-page px-4">
+          <MeetRed href="/login" cta={BRAND.tagline.replace(/\.$/, '')} />
         </div>
       </section>
 

@@ -1,4 +1,6 @@
 import { redirect } from 'next/navigation';
+import { RedSays } from '@/components/mascot';
+import { BRAND } from '@/lib/brand';
 import { api, getMe } from '@/lib/server-api';
 import { DevLoginForm } from './dev-login';
 
@@ -20,7 +22,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
 
   return (
     <div className="mx-auto max-w-sm py-10">
-      <h1 className="h1 mb-2">Sign in</h1>
+      <RedSays size={84} className="mb-8">Hi, I&apos;m {BRAND.mascot}! Sign in and let&apos;s find your next good book.</RedSays>
+      <h1 className="h1 mb-2">Sign in to {BRAND.name}</h1>
       <p className="mb-8 text-muted">One tap with Google. We only get your name, email and photo.</p>
       {error && (
         <p role="alert" className="mb-6 border border-danger p-3 text-sm text-danger">

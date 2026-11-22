@@ -279,7 +279,7 @@ export class EventsService {
     return [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//BookClubPlatform//Events//EN',
+      'PRODID:-//RedReader//Events//EN',
       'CALSCALE:GREGORIAN',
       'METHOD:PUBLISH',
       'BEGIN:VEVENT',

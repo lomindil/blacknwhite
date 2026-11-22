@@ -1,6 +1,7 @@
 import type { HomeFeed, Recommendations } from '@bnw/shared';
 import Link from 'next/link';
 import { IconSparkle } from '@/components/icons';
+import { RedMascot } from '@/components/mascot';
 import { RecClubCard } from '@/components/recommendations';
 import { BookCard, BookCover, ClubCard, Empty, EventCard, Section } from '@/components/ui';
 import { cityName, readersLabel } from '@/lib/format';
@@ -21,10 +22,12 @@ export default async function HomePage() {
       <div>
         {brandNew ? (
           <div className="relative mb-10 overflow-hidden rounded-3xl border border-sage-200 bg-sage-50 p-8 sm:p-10">
-            <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 animate-drift rounded-full bg-ochre-100/70 blur-2xl" aria-hidden />
-            <div className="relative animate-fade-up">
+            <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 animate-drift rounded-full bg-russet-100/60 blur-2xl" aria-hidden />
+            <RedMascot size={170} className="pointer-events-none absolute -bottom-3 right-6 hidden animate-float-slow md:block" />
+            <div className="relative animate-fade-up md:pr-48">
               <div className="eyebrow mb-3">Welcome, {firstName}</div>
               <h1 className="h1 max-w-xl">Let&apos;s find your first book club.</h1>
+              <p className="mt-2 font-serif text-lg text-russet-700">Red&apos;s ready when you are.</p>
               <p className="mt-3 max-w-xl text-ink/75">
                 Tell us what you like to read — or what you&apos;d like to try — and we&apos;ll match you with clubs and books. It takes
                 about two minutes, and it&apos;s fine if you haven&apos;t read much yet.

@@ -5,7 +5,7 @@ import { createBook, findBookByIsbn, NewBook } from './book-factory';
 import { subjectsToGenres } from './genres';
 
 // Open Library uses 3-letter language codes.
-const UA = { 'User-Agent': 'BookClubPlatform/0.1 (dev)' };
+const UA = { 'User-Agent': 'RedReader/0.1 (+https://redreader.in)' };
 
 async function getJson<T>(url: string): Promise<T | null> {
   const res = await fetch(url, { signal: AbortSignal.timeout(5000), headers: UA });
@@ -55,7 +55,7 @@ export class CatalogService {
     const fields = 'key,title,subtitle,author_name,first_publish_year,isbn,cover_i,language,number_of_pages_median,publisher,subject';
     const res = await fetch(
       `https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=8&fields=${fields}`,
-      { signal: AbortSignal.timeout(4000), headers: { 'User-Agent': 'BookClubPlatform/0.1 (dev)' } },
+      { signal: AbortSignal.timeout(4000), headers: { 'User-Agent': 'RedReader/0.1 (+https://redreader.in)' } },
     );
     if (!res.ok) return [];
     const json = (await res.json()) as { docs: any[] };

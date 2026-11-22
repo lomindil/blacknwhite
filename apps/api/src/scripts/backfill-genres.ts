@@ -22,7 +22,7 @@ async function main() {
         if (b.authors[0]) q.set('author', b.authors[0].author.name);
         const res = await fetch(`https://openlibrary.org/search.json?${q}`, {
           signal: AbortSignal.timeout(5000),
-          headers: { 'User-Agent': 'BookClubPlatform/0.1 (dev)' },
+          headers: { 'User-Agent': 'RedReader/0.1 (+https://redreader.in)' },
         });
         if (res.ok) genres = subjectsToGenres(((await res.json()) as { docs: { subject?: string[] }[] }).docs[0]?.subject);
       } catch {

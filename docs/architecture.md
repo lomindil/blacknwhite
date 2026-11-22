@@ -1,6 +1,6 @@
-# Book Club Platform — Web Architecture
+# RedReader — Web Architecture
 
-> **Status:** Phase 1 built for local development · **Owner:** Aman Chaturvedi · **Last updated:** 2026-10-20
+> **Status:** Phase 1 built for local development · **Owner:** Aman Chaturvedi · **Last updated:** 2026-11-22
 > Companion doc: [Business Plan](business-plan.md) · Change history: [CHANGELOG](../CHANGELOG.md)
 
 ---

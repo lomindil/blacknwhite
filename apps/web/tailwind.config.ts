@@ -9,6 +9,8 @@ const accents = {
   sky: { 50: '#EEF3F8', 100: '#DCE6F1', 200: '#C4D3E5', 300: '#A9BFD8', 600: '#4E6E92', 700: '#3D5775', 800: '#2F4359' },
   ochre: { 50: '#FBF5E6', 100: '#F5E8C4', 200: '#EED9A0', 300: '#E6C980', 600: '#A57C22', 700: '#82611A', 800: '#624914' },
   plum: { 50: '#F4F1F8', 100: '#E7E0F0', 200: '#D6CBE6', 300: '#C3B4DA', 600: '#6F5B93', 700: '#584876', 800: '#433759' },
+  // Red the red panda. The brand's second colour: logo, wordmark, mascot and a few highlights — never large areas.
+  russet: { 50: '#FCF1EC', 100: '#F8E0D5', 200: '#F0C3B0', 300: '#E5A185', 500: '#CF6A45', 600: '#B9532F', 700: '#97401F', 800: '#733119' },
   rose: { 50: '#FBF0F1', 100: '#F5DCDF', 200: '#EDC3C8', 300: '#E2A9B0', 600: '#A8566A', 700: '#874455', 800: '#673441' },
 };
 

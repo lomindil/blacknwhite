@@ -11,7 +11,7 @@ const serif = Fraunces({ subsets: ['latin'], variable: '--font-serif', display: 
 const sans = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swap' });
 
 export const metadata: Metadata = {
-  title: { default: `${BRAND.name} — ${BRAND.tagline}`, template: `%s · ${BRAND.name}` },
+  title: { default: `${BRAND.name} — ${BRAND.tagline.replace(/\.$/, '')}`, template: `%s · ${BRAND.name}` },
   description: BRAND.description,
 };
 

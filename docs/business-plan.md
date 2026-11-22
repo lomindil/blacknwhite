@@ -1,6 +1,6 @@
-# Book Club Platform — Business Plan
+# RedReader — Business Plan
 
-> **Status:** Draft v1 · **Owner:** Aman Chaturvedi · **Last updated:** 2026-10-19
+> **Status:** Draft v1 · **Owner:** Aman Chaturvedi · **Last updated:** 2026-11-22
 > Companion doc: [Web Architecture](architecture.md) · Change history: [CHANGELOG](../CHANGELOG.md)
 
 ---
@@ -16,6 +16,8 @@ We are building India's home for reading together: a web platform (mobile apps l
 - **Revenue:** organizer subscriptions, event ticketing fees, bookstore listings, affiliate commissions, and later corporate clubs. Readers never pay to join a club.
 - **Cost to reach Phase 1 launch:** about 3–4 months of founder engineering time and under ₹15,000/month in infrastructure.
 - **Phase 1 goal:** 100 active clubs and 3,000 monthly active readers across our launch communities within 6 months of launch, with 20+ organizers paying.
+
+**Brand.** The platform is called **RedReader** (redreader.in). Its mascot, **Red**, is a red panda — a warm, bookish character for marketing ("Join Red on your reading journey", "Red's pick of the month") and in-product moments: welcomes, tips and reminders. Visually, russet is used sparingly (logo, wordmark, mascot, highlights) against the existing off-white and sage palette.
 
 ## 2. Problem and opportunity
 
@@ -209,6 +211,7 @@ The north-star metric is **weekly active clubs**: clubs with at least one discus
 
 - [ ] Shortlist launch communities (cities with active clubs, bookstores, lit events)
 - [ ] Interview 15 club organizers across those communities
-- [ ] Pick a product name and check domain availability
+- [x] Pick a product name and check domain availability — **RedReader**, `redreader.in` (2026-11-22)
+- [ ] Check RedReader trademarks in India (class 9, 41, 42) and similarly named apps; secure Instagram and X handles
 - [ ] Sign up 10 design-partner clubs
 - [ ] Start Phase 1 build (see the [architecture document](architecture.md))
