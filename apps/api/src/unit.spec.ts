@@ -1,6 +1,7 @@
 import { isbn13to10, normalizeIsbn } from './books/book-factory';
 import { buildSchedule, weekThreadTitle } from './clubs/schedule';
 import { detectSource, mapRow } from './imports/imports.service';
+import { parseEnv, productionWarnings } from './config/env';
 
 describe('schedule', () => {
   it('splits chapters into weeks, last week shorter', () => {
@@ -62,5 +63,29 @@ describe('CSV import mapping', () => {
       status: null,
       skipReason: 'Did not finish — skipped',
     });
+  });
+});
+
+describe('deployment environment (APP_ENV)', () => {
+  const base = { DATABASE_URL: 'postgresql://x' };
+  const prod = { ...base, APP_ENV: 'production', NODE_ENV: 'production', OPS_PASSWORD: 'a-real-secret' };
+
+  it('defaults to development with dev login on', () => {
+    const e = parseEnv(base);
+    expect(e.APP_ENV).toBe('development');
+    expect(e.DEV_LOGIN ?? true).toBe(true);
+  });
+
+  it('accepts a correct production config, and warns about missing Google sign-in and email', () => {
+    const e = parseEnv(prod);
+    expect(e.APP_ENV).toBe('production');
+    expect(productionWarnings(e).join(' ')).toMatch(/Google sign-in.*SMTP_URL/);
+    expect(productionWarnings(parseEnv({ ...prod, GOOGLE_CLIENT_ID: 'id', GOOGLE_CLIENT_SECRET: 's', SMTP_URL: 'smtp://x', WEB_ORIGIN: 'https://redreader.in' }))).toEqual([]);
+  });
+
+  it('refuses unsafe production settings', () => {
+    expect(() => parseEnv({ ...prod, DEV_LOGIN: 'true' })).toThrow(/DEV_LOGIN/);
+    expect(() => parseEnv({ ...prod, NODE_ENV: 'development' })).toThrow(/NODE_ENV=production/);
+    expect(() => parseEnv({ ...prod, OPS_PASSWORD: undefined })).toThrow(/OPS_PASSWORD/);
   });
 });

@@ -33,7 +33,7 @@ const BELIEFS = [
     icon: <IconShield size={22} />,
     tone: 'bg-sky-100 text-sky-700',
     title: 'Private by default',
-    body: 'We never store where you are, only your city. Your data stays in India, and you can export or delete it any time.',
+    body: 'We never store where you are, only your city. We never sell your data, and you can export or delete it any time.',
   },
   {
     icon: <IconCalendar size={22} />,
@@ -164,7 +164,7 @@ export default function AboutPage() {
               lights on without selling anyone’s data.
             </p>
             <ul className="mt-5 space-y-2 text-sm">
-              {['No ads inside discussions', 'Your data stays in India', 'Export or delete your account any time'].map((t) => (
+              {['No ads inside discussions', 'We never sell your data', 'Export or delete your account any time'].map((t) => (
                 <li key={t} className="flex items-center gap-2"><IconCheck size={16} className="text-sage-600" /> {t}</li>
               ))}
             </ul>
@@ -176,9 +176,9 @@ export default function AboutPage() {
       <section className="bleed border-t border-line/70 bg-paper py-20">
         <div className="mx-auto grid max-w-page gap-6 px-4 md:grid-cols-3">
           {[
-            { title: 'Say hello', body: 'Questions, ideas, or want to bring your club over?', contact: 'hello@[domain]' },
-            { title: 'Bookstores and publishers', body: 'List your store, host events, or partner with clubs.', contact: 'partners@[domain]' },
-            { title: 'Grievances', body: 'Report content or raise a concern with our grievance officer.', contact: 'grievance@[domain]' },
+            { title: 'Say hello', body: 'Questions, ideas, or want to bring your club over?', contact: 'hello@redreader.in' },
+            { title: 'Bookstores and publishers', body: 'List your store, host events, or partner with clubs.', contact: 'partners@redreader.in' },
+            { title: 'Grievances', body: 'Report content or raise a concern with our grievance officer.', contact: 'grievance@redreader.in' },
           ].map((c, i) => (
             <Reveal key={c.title} delay={i * 100} className="card">
               <h3 className="font-serif text-lg font-medium">{c.title}</h3>

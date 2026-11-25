@@ -388,6 +388,8 @@ What the code in `apps/` and `packages/` does differently from, or in addition t
 
 **Deviations**
 
+- **Hosting is Lightsail in Sydney, not AWS Mumbai** (2026-11-25). The AWS project can only create resources in `ap-southeast-2`. Phase 1 runs on a single 4 GB Lightsail instance with Docker Compose instead of ECS/RDS/ElastiCache; see [deployment.md](deployment.md). Moving to India is a P1 item in the production checklist.
+
 - **Worker runs inside the API in dev** (`RUN_WORKER_IN_API=true`) to save memory. In production run `node dist/worker.js` as its own process from the same image, as planned. The realtime service relays worker events to sockets through Redis pub/sub.
 - **Meilisearch is called over its REST API** rather than through the JS client, so client/server version drift can't break search. Postgres search takes over automatically whenever Meilisearch is down.
 - **Realtime posts are pushed as ids, not content.** Clients refetch over REST, so per-post spoiler gates (`chapter_ref`) apply to live updates too.

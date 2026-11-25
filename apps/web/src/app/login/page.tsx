@@ -36,7 +36,12 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         </svg>
         Continue with Google
       </a>
-      {!config.google && <p className="mt-2 text-xs text-muted">Google sign-in needs GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET on the API.</p>}
+      {!config.google &&
+        (config.devLogin ? (
+          <p className="mt-2 text-xs text-muted">Google sign-in needs GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET on the API.</p>
+        ) : (
+          <p className="mt-2 text-sm text-muted">Sign-in is being set up. Please check back soon.</p>
+        ))}
       {config.devLogin && <DevLoginForm next={next} />}
       <p className="mt-8 text-xs text-muted">
         By continuing you agree to our <a href="/terms" className="link">terms</a> and <a href="/privacy" className="link">privacy policy</a>.

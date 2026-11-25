@@ -13,7 +13,7 @@ export default function TermsPage() {
       <h2 className="h3 mt-8">Reporting and takedown</h2>
       <p>Anyone can report content using the Report link next to it. We review reports and remove content that breaks these terms or the law within the timelines required by the Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021.</p>
       <h2 className="h3 mt-8" id="grievance">Grievance officer</h2>
-      <p>Name: [to be appointed]<br />Email: grievance@[domain]<br />We acknowledge complaints within 24 hours and resolve them within 15 days.</p>
+      <p>Name: [to be appointed]<br />Email: grievance@redreader.in<br />We acknowledge complaints within 24 hours and resolve them within 15 days.</p>
       <h2 className="h3 mt-8">Affiliate links</h2>
       <p>Some "Buy" links on book pages are affiliate links. We may earn a small commission at no extra cost to you.</p>
       <h2 className="h3 mt-8">Ending your account</h2>

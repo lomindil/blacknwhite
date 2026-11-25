@@ -1,7 +1,13 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 const API_URL = process.env.API_URL ?? 'http://localhost:4000';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Production image: a self-contained server with only the files it needs (see apps/web/Dockerfile).
+  output: 'standalone',
+  outputFileTracingRoot: path.join(path.dirname(fileURLToPath(import.meta.url)), '../..'),
   transpilePackages: ['@bnw/shared'],
   poweredByHeader: false,
   images: { unoptimized: true },

@@ -1,0 +1,15 @@
+# Keep the Docker build context small and free of secrets.
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+**/*.tsbuildinfo
+**/.env
+**/.env.*
+!**/.env.example
+apps/api/uploads
+.run
+.git
+*.pdf
+deploy/.env
+deploy/certs

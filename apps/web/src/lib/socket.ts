@@ -7,7 +7,9 @@ let socket: Socket | null = null;
 
 export function getSocket(): Socket {
   if (!socket) {
-    socket = io(process.env.NEXT_PUBLIC_WS_URL ?? 'http://localhost:4000', {
+    // Production serves /ws from the same origin (Caddy routes it to the API); dev sets NEXT_PUBLIC_WS_URL.
+    const url = process.env.NEXT_PUBLIC_WS_URL || undefined;
+    socket = io(url as string, {
       path: '/ws',
       withCredentials: true,
       transports: ['websocket', 'polling'],

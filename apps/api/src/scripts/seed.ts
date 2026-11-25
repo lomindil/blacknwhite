@@ -82,6 +82,11 @@ const PEOPLE = [
 ] as const;
 
 async function main() {
+  // Sample data is for development only: this script wipes the database first.
+  if (process.env.APP_ENV === 'production' || process.env.NODE_ENV === 'production') {
+    console.error('Refusing to seed: this is a production deployment (APP_ENV/NODE_ENV=production). Seeding wipes all data.');
+    process.exit(1);
+  }
   const app = await NestFactory.createApplicationContext(SeedModule, { logger: ['warn', 'error'] });
   const prisma = app.get(PrismaService);
   const redis = app.get(RedisService);

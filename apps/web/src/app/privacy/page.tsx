@@ -21,11 +21,15 @@ export default function PrivacyPage() {
         <li>We don't sell your personal data.</li>
       </ul>
       <h2 className="h3 mt-8">Where your data lives</h2>
-      <p>Your data is stored on servers in India (AWS Mumbai).</p>
+      <p>
+        Your data is stored on Amazon Web Services (AWS) servers in Sydney, Australia, encrypted in transit and protected by
+        access controls. Cloudflare delivers the site to your browser and Amazon SES sends our emails; neither may use your
+        data for anything else. We plan to move hosting to India and will update this page when we do.
+      </p>
       <h2 className="h3 mt-8">Your rights</h2>
-      <p>Under the Digital Personal Data Protection Act, 2023 you can access, correct, export and erase your data. Export your data or delete your account any time from Settings. Deleted accounts are removed within 30 days; posts remain in club discussions anonymised as "Deleted user".</p>
+      <p>Under the Digital Personal Data Protection Act, 2023 you can access, correct, export and erase your data. Export your data or delete your account any time from Settings. When you delete your account, your personal data is erased straight away; posts remain in club discussions anonymised as "Deleted user".</p>
       <h2 className="h3 mt-8">Contact</h2>
-      <p>Questions or complaints: grievance@[domain]</p>
+      <p>Questions or complaints: grievance@redreader.in</p>
     </article>
   );
 }

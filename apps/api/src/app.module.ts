@@ -9,6 +9,7 @@ import { Public } from './common/http';
 import { CoreModule } from './core/core.module';
 import { PrismaService } from './core/prisma.service';
 import { RedisService } from './core/redis.service';
+import { env } from './config/env';
 import { DiscussionModule } from './discussion/discussion.module';
 import { DmsModule } from './dms/dms.module';
 import { EventsModule } from './events/events.module';
@@ -36,7 +37,7 @@ class HealthController {
       this.prisma.$queryRaw`SELECT 1`.then(() => true).catch(() => false),
       this.redis.client.ping().then(() => true).catch(() => false),
     ]);
-    return { ok: db && redis, db, redis };
+    return { ok: db && redis, db, redis, env: env().APP_ENV };
   }
 }
 

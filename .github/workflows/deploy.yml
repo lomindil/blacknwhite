@@ -1,0 +1,88 @@
+# Release to production: push a tag like v0.1.0 (or run manually from the Actions tab).
+# Tests → build both images to GitHub's registry → copy deploy files to the server → restart.
+#
+# Repository secrets (Settings → Secrets and variables → Actions):
+#   DEPLOY_HOST         server's static IP
+#   DEPLOY_SSH_KEY      private key for the "ubuntu" user (the Lightsail key pair)
+#   DEPLOY_KNOWN_HOSTS  output of: ssh-keyscan -t ed25519 <DEPLOY_HOST>
+name: Deploy
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    uses: ./.github/workflows/ci.yml
+
+  images:
+    needs: checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        app: [api, web]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/redreader-${{ matrix.app }}
+          tags: |
+            type=ref,event=tag
+            type=sha,prefix=sha-
+            type=raw,value=latest
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/${{ matrix.app }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.app }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.app }}
+
+  deploy:
+    needs: images
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+    env:
+      TAG: ${{ github.ref_type == 'tag' && github.ref_name || format('sha-{0}', github.sha) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: SSH key
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+          echo "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+      - name: Copy deploy files
+        run: |
+          TARGET=ubuntu@${{ secrets.DEPLOY_HOST }}
+          scp -i ~/.ssh/id_deploy deploy/docker-compose.yml deploy/Caddyfile "$TARGET:/srv/redreader/"
+          scp -i ~/.ssh/id_deploy -r deploy/scripts "$TARGET:/srv/redreader/"
+      - name: Pull and restart
+        run: |
+          # TAG and the short-lived registry token are filled in here, on the runner (hence the unquoted EOS).
+          # shellcheck disable=SC2087
+          ssh -i ~/.ssh/id_deploy ubuntu@${{ secrets.DEPLOY_HOST }} bash -s <<EOS
+          set -e
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          TAG=$TAG /srv/redreader/scripts/deploy.sh
+          docker logout ghcr.io
+          EOS

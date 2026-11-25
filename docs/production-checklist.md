@@ -1,26 +1,32 @@
 # Before Production — Checklist
 
-> **Status:** open · **Last updated:** 2026-10-20
+> **Status:** open · **Last updated:** 2026-11-25
 > Everything that must be done before real users are on the platform. Tick items as they're done, add new ones as they come up, and log notable changes in the [CHANGELOG](../CHANGELOG.md). Undecided questions belong in [open-questions.md](open-questions.md); this list is for work we already know we have to do.
 
 **Priority:** **P0** blocks the private beta · **P1** needed before the public launch · **P2** soon after launch.
 
 ## Data and storage
 
-- [ ] **P0 — Move photo uploads to Cloudflare R2.** Uploads are written to local disk (`UPLOAD_DIR`, default `apps/api/uploads`), which containers wipe on every deploy. Write the R2 version of `StorageService` (the one place uploads are read and written), set `MEDIA_BASE_URL` to the R2/CDN URL, and copy over any existing files.
-- [ ] **P0 — Back up photos.** Turn on R2 object versioning, or a scheduled copy to a second bucket. The database has backups; photos currently have none.
-- [ ] **P0 — Persistent volume for Meilisearch.** If the index is lost it can be rebuilt with `pnpm --filter @bnw/api search:reindex`, but search falls back to slower Postgres matching until then. Add the reindex to the deploy runbook.
-- [ ] **P1 — Database sizing and alarms.** Start on `db.t4g.small` (the 1 GB RAM of `micro` gets tight at around 3–5k monthly active readers). Turn on storage autoscaling, and set CloudWatch alarms on free memory, free storage and CPU. Move to `t4g.medium` at around 30k monthly active readers.
-- [ ] **P1 — Test a database restore.** Daily backups with 7-day point-in-time recovery are planned; restore one into staging once to prove it works.
+- [x] ~~**P0 — Keep photos safe across deploys.**~~ On the single Lightsail server, photos live in a Docker volume that survives deploys and is covered by instance snapshots; the nightly backup also copies them to the Lightsail bucket. Moving to object storage (Lightsail bucket or R2, via `StorageService`) moves to P2 — needed only when we run more than one server.
+- [ ] **P0 — Back up the database and photos.** `deploy/scripts/backup.sh` runs nightly (02:30 IST): `pg_dump` kept 14 days on the server, plus copies of dumps (30 days) and photos in the Lightsail bucket. Still to do: create the bucket and its access key, write `/srv/redreader/backup.env`, and turn on Lightsail automatic snapshots.
+- [x] ~~**P0 — Persistent volume for Meilisearch.**~~ Done in `deploy/docker-compose.yml` (`meili` volume). If it's ever lost: `docker compose exec api node dist/scripts/reindex.js`.
+- [ ] **P1 — Server sizing and alarms.** Started on Lightsail 4 GB (~350 MB used at idle). Set Lightsail metric alarms on CPU and disk, and move to a managed database (Lightsail or RDS) when the database outgrows the server or we want point-in-time recovery.
+- [ ] **P1 — Test a database restore.** Restore last night's dump into a throwaway database once, to prove the backups work.
 - [ ] **P1 — Database size panel in the admin portal.** Table sizes and growth per week, so we notice storage changes early.
 - [ ] **P2 — Re-measure the storage estimate after the private beta** with real club activity, and update the numbers below.
 - [x] ~~Group notifications and delete old ones~~ — done 2026-10-20 (see CHANGELOG).
 
 ## Infrastructure and deployment
 
-- [ ] **P0 — Dockerfiles and the AWS deploy pipeline** for staging (auto-deploy from `main`) and production (tagged releases). CI already runs typecheck, tests and builds.
-- [ ] **P0 — Run the worker as its own process** (`RUN_WORKER_IN_API=false`, `node dist/worker.js`).
-- [ ] **P0 — Production secrets and config:** `OPS_PASSWORD` (the API refuses to start in production with the default), `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`, `SMTP_URL`, `MEILI_KEY`, `WEB_ORIGIN`, `AMAZON_ASSOCIATE_TAG`. `DEV_LOGIN` is already refused in production.
+- [x] ~~**P0 — Dockerfiles and the deploy pipeline.**~~ `apps/api/Dockerfile`, `apps/web/Dockerfile`, `deploy/` (compose, Caddy, scripts) and `.github/workflows/deploy.yml` (tag `v*` → tests → images → deploy). Tested end-to-end locally on 2026-11-25. See [deployment.md](deployment.md).
+- [x] ~~**P0 — Run the worker as its own process.**~~ The `worker` service in `deploy/docker-compose.yml`.
+- [x] ~~**P0 — Commit everything the build needs.**~~ Done 2026-11-25; verified with a clean build from git. `apps/web/src/components/mascot.tsx` and `apps/web/src/components/landing/meet-red.tsx` were missing from the "RedReader" commit, so a clean build from git fails.
+- [ ] **P0 — Launch the Lightsail server** (Sydney, 4 GB): static IP, firewall (22, 80, 443), run `bootstrap.sh`, add the GitHub deploy secrets, first release. Steps in [deployment.md](deployment.md).
+- [ ] **P0 — Cloudflare for redreader.in:** nameservers moved, proxied `A` records for `@` and `www`, SSL mode "Full (strict)", Origin Certificate installed in `/srv/redreader/certs`, email forwarding for `hello@`, `partners@`, `grievance@`.
+- [x] ~~**P0 — Separate development and production.**~~ `APP_ENV`: production is Google-only, refuses seeding and unsafe settings; development keeps the dev login and sample data. See [deployment.md](deployment.md).
+- [ ] **P0 — Production secrets and config** in `/srv/redreader/.env`: generated by `bootstrap.sh` (database, search, admin portal); still to add `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`, `SMTP_URL`, `ADMIN_EMAILS`, `AMAZON_ASSOCIATE_TAG`. `DEV_LOGIN` is refused in production.
+- [ ] **P1 — Only accept web traffic from Cloudflare.** Limit the server's ports 80/443 to Cloudflare's IP ranges in the Lightsail firewall, so nobody can bypass Cloudflare.
+- [ ] **P1 — Move hosting to India** before the public launch (our AWS project can only use Sydney). Options: a standard AWS account in Mumbai, or another provider with Indian data centres. Update the privacy policy when done.
 - [ ] **P1 — Sentry, logs and uptime checks** (web, API health endpoint, WebSocket gateway). Product analytics with PostHog.
 - [ ] **P1 — Load test** the busiest paths: thread pages, posting, the home feed and recommendations.
 
@@ -32,13 +38,12 @@
 
 ## Messaging
 
-- [ ] **P0 — Production email provider** with SPF, DKIM and DMARC on the sending domain (dev uses Mailpit).
+- [ ] **P0 — Production email via Amazon SES** (Sydney): verify `redreader.in` (DKIM records in Cloudflare), add SPF and DMARC, request production access (SES starts in a sandbox that only sends to verified addresses), create SMTP credentials for `SMTP_URL`.
 - [ ] **P1 — Register the WhatsApp templates with Meta** (`event_reminder`, `weekly_schedule_nudge`) and set `WHATSAPP_TOKEN` and `WHATSAPP_PHONE_NUMBER_ID`. Until then, messages are only logged.
 
 ## Legal and compliance
 
 - [ ] **P0 — Trademark check for RedReader** (and the red panda mascot) before printing anything; file if clear.
-- [ ] **P1 — Point redreader.in at production**, with `WEB_ORIGIN`, `MAIL_FROM` (`hello@redreader.in`) and the Google OAuth redirect on the new domain.
 - [ ] **P1 — Final mascot artwork.** The current Red is a hand-drawn SVG placeholder; commission an illustrator for a small set of poses (reading, waving, sleeping on a book, celebrating) and a matching app icon.
 
 - [ ] **P0 — Legal review** of the terms of use and privacy policy templates.

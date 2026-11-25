@@ -7,7 +7,7 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/errors';
-import { env } from './config/env';
+import { env, productionWarnings } from './config/env';
 import { RedisIoAdapter } from './realtime/realtime.gateway';
 import { uploadDir } from './core/storage.service';
 
@@ -29,8 +29,9 @@ async function bootstrap() {
 
   app.enableShutdownHooks();
   await app.listen(config.PORT);
+  for (const w of productionWarnings(config)) Logger.warn(w, 'Config');
   Logger.log(
-    `API on http://localhost:${config.PORT} · worker ${config.RUN_WORKER_IN_API ? 'in-process' : 'separate'} · ` +
+    `API (${config.APP_ENV}) on http://localhost:${config.PORT} · worker ${config.RUN_WORKER_IN_API ? 'in-process' : 'separate'} · ` +
       `dev login ${config.DEV_LOGIN ? 'on' : 'off'} · search ${config.MEILI_URL ? 'meilisearch' : 'postgres'}`,
     'Bootstrap',
   );

@@ -13,6 +13,28 @@ Format:
 
 ---
 
+## 2026-11-25 — Production setup: Lightsail in Sydney
+
+**Docs:** deployment (new), production-checklist, architecture (§9 deviation), README
+**Change:**
+- Production will run on one **Lightsail instance (4 GB) in Sydney**, the only Region our AWS project allows, with Docker Compose.
+  - On the server: Caddy for HTTPS, the web app, API, worker, Postgres, Redis and Meilisearch.
+  - Outside it: Cloudflare for DNS, CDN and email forwarding; Amazon SES for email; nightly backups to a Lightsail bucket plus automatic snapshots.
+- Added Dockerfiles for the API and web app (Next.js standalone output), `deploy/` (compose file, Caddyfile, env template, bootstrap, deploy and backup scripts), and a **Deploy** workflow: tag `v*` runs tests, builds images to the GitHub container registry, and deploys over SSH. The whole stack was rehearsed locally behind Caddy.
+- The browser's WebSocket now uses the site's own origin by default, so one image works on any domain.
+- Behind Cloudflare and Caddy, the API sees the visitor's real IP. This keeps sign-in rate limits per person.
+- Privacy and copy updates:
+  - Removed "your data stays in India". The privacy policy now says data is hosted on AWS in Sydney, names Cloudflare and SES, and states that moving to India is planned.
+  - Account deletion is now described accurately (immediate).
+  - Contact addresses now use `@redreader.in`.
+
+- **`APP_ENV` (`development` | `production`)** says which deployment is running.
+  - **Production:** Google sign-in only. The API refuses to start with dev login on, without `NODE_ENV=production`, or with the default admin password, and warns if Google or SMTP is missing. The seed script refuses to run and isn't shipped in the production image. The login page shows "Sign-in is being set up" instead of developer hints.
+  - **Development:** the simple dev login is on by default, as before.
+  - `/health` reports the environment.
+
+**Why:** First production deployment. Sydney is a constraint of the AWS project; moving hosting to India is on the pre-launch checklist.
+
 ## 2026-11-22 — Name chosen: RedReader, with Red the red panda
 
 **Docs:** business-plan (§1, §12), architecture, README, open-questions (#5 resolved), production-checklist

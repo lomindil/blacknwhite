@@ -154,7 +154,7 @@ const SLIDES: Slide[] = [
     eyebrow: 'Safe by design',
     title: 'A friendly space, private by default',
     body: 'We never store where you are — only your city. Messages stay between people who share a club, and blocking or reporting is always one tap away.',
-    points: ['No precise location, ever', 'Your data stays in India', 'Export or delete your account any time'],
+    points: ['No precise location, ever', 'We never sell your data', 'Export or delete your account any time'],
     cta: { href: '/privacy', label: 'Read our privacy policy' },
     Mock: SafetyMock,
   },

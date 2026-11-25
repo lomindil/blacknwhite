@@ -1,0 +1,116 @@
+# Production stack for a single server (Lightsail). Lives in /srv/redreader on the server, next to .env.
+#   docker compose up -d          start or update everything
+#   docker compose logs -f api    follow API logs
+# Only Caddy is published; everything else is on the private Docker network.
+name: redreader
+
+x-app: &app
+  image: ghcr.io/lomindil/redreader-api:${TAG:-latest}
+  restart: unless-stopped
+  env_file: .env
+  environment:
+    # Production unless the server's .env says otherwise (it shouldn't).
+    APP_ENV: ${APP_ENV:-production}
+    NODE_ENV: production
+    PORT: "4000"
+    DATABASE_URL: postgresql://redreader:${POSTGRES_PASSWORD}@postgres:5432/redreader?schema=public
+    REDIS_URL: redis://redis:6379
+    MEILI_URL: http://meilisearch:7700
+    RUN_WORKER_IN_API: "false"
+    UPLOAD_DIR: uploads
+    MEDIA_BASE_URL: /media
+  logging: &logging
+    driver: json-file
+    options: { max-size: 10m, max-file: "3" }
+
+services:
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./certs:/certs:ro
+      - caddy_data:/data
+    depends_on: [web, api]
+    logging: *logging
+
+  web:
+    image: ghcr.io/lomindil/redreader-web:${TAG:-latest}
+    restart: unless-stopped
+    environment:
+      API_URL: http://api:4000
+    depends_on: [api]
+    logging: *logging
+
+  # Applies database migrations, then exits. The API waits for it.
+  migrate:
+    <<: *app
+    restart: "no"
+    command: ["node_modules/.bin/prisma", "migrate", "deploy"]
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  api:
+    <<: *app
+    volumes: [uploads:/app/apps/api/uploads]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_started }
+      meilisearch: { condition: service_started }
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:4000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  worker:
+    <<: *app
+    command: ["node", "dist/worker.js"]
+    volumes: [uploads:/app/apps/api/uploads]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_started }
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: redreader
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: redreader
+    command: ["postgres", "-c", "shared_buffers=256MB", "-c", "effective_cache_size=768MB", "-c", "max_connections=60"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U redreader"]
+      interval: 5s
+      retries: 10
+    logging: *logging
+
+  # Sessions, queues and rate limits. Saved to disk so sign-ins survive restarts; BullMQ needs noeviction.
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "noeviction"]
+    volumes: [redis:/data]
+    logging: *logging
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.12
+    restart: unless-stopped
+    environment:
+      MEILI_ENV: production
+      MEILI_MASTER_KEY: ${MEILI_KEY}
+      MEILI_NO_ANALYTICS: "true"
+      MEILI_MAX_INDEXING_MEMORY: 256Mb
+    volumes: [meili:/meili_data]
+    logging: *logging
+
+volumes:
+  pgdata:
+  redis:
+  meili:
+  uploads:
+  caddy_data:
