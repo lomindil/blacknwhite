@@ -49,7 +49,9 @@ Outside the server:
 | Firewall | — | 22 open (keys only, no root, fail2ban); 80/443 only from Cloudflare's IP ranges |
 | Bucket | `redreader-backups-896305834989` | Private, `small_1_0` ($1/mo, 5 GB); its own access key in `/srv/redreader/backup.env` |
 | SSH keys | `redreader-admin` (Lightsail key pair), `github-actions-deploy@redreader` | Private keys in `~/.ssh/` on the owner's machine: `redreader-admin.pem`, `redreader-deploy`. Verified host key in `~/.ssh/redreader_known_hosts` |
-| DNS | Cloudflare zone `redreader.in` | `A @` and `CNAME www`, both proxied |
+| DNS | Cloudflare zone `redreader.in` | `A @` and `CNAME www`, proxied. Mail records are DNS only: Zoho (verification TXT, MX, SPF, DKIM), SES (3 DKIM CNAMEs, `mail` MX and SPF), `_dmarc` |
+| SES identity | `redreader.in` | Easy DKIM, MAIL FROM `mail.redreader.in`; account-level suppression for bounces and complaints |
+| IAM user | `redreader-ses-smtp` | Only `ses:SendRawEmail` from `*@redreader.in`. Its SMTP credentials (derived from the access key) live only in the server's `SMTP_URL`; rotate by creating a new key, updating `.env`, then deleting the old key |
 
 The project is on the AWS **Free plan** until it's upgraded; see the checklist item about upgrading before the credits run out.
 
