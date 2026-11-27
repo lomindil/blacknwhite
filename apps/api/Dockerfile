@@ -18,10 +18,21 @@ RUN pnpm --filter @bnw/shared build && pnpm --filter @bnw/api build
 # No sample data in production images (the script also refuses to run in production).
 RUN rm -f apps/api/dist/scripts/seed.js apps/api/dist/scripts/seed.js.map
 
-# Runtime keeps the installed dependencies (including the Prisma CLI for migrations).
+# Production dependencies only (no TypeScript, Nest CLI, Jest or turbo). The Prisma CLI is a
+# runtime dependency because the "migrate" service uses it.
+FROM base AS deps
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/shared/package.json packages/shared/
+COPY apps/api/package.json apps/api/
+COPY apps/api/prisma apps/api/prisma
+RUN pnpm install --frozen-lockfile --prod --filter "@bnw/api..." \
+  && cd apps/api && node_modules/.bin/prisma generate
+
 FROM base AS run
 ENV NODE_ENV=production
-COPY --from=build --chown=node:node /app /app
+COPY --from=deps --chown=node:node /app /app
+COPY --from=build --chown=node:node /app/packages/shared/dist /app/packages/shared/dist
+COPY --from=build --chown=node:node /app/apps/api/dist /app/apps/api/dist
 WORKDIR /app/apps/api
 RUN mkdir -p uploads && chown node:node uploads
 USER node

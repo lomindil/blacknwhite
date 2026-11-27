@@ -7,7 +7,9 @@ cd /srv/redreader
 if [ -n "${TAG:-}" ]; then sed -i "s|^TAG=.*|TAG=$TAG|" .env; fi
 docker compose pull --quiet
 docker compose up -d --remove-orphans
-docker image prune -f >/dev/null
+# Delete images no container uses and older than a week: keeps recent releases for quick rollbacks
+# (anything older can be pulled from the registry again) without filling the disk.
+docker image prune -af --filter "until=168h" >/dev/null
 echo "Waiting for the API to report healthy…"
 for i in $(seq 1 30); do
   if docker compose exec -T api node -e "fetch('http://localhost:4000/health').then(r=>r.json()).then(j=>process.exit(j.ok?0:1)).catch(()=>process.exit(1))" 2>/dev/null; then
