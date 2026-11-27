@@ -39,7 +39,7 @@
 
 ## Messaging
 
-- [ ] **P0 — Production email via Amazon SES** (Sydney). Done 2026-11-27: domain identity `redreader.in` verified (Easy DKIM 2048-bit, custom MAIL FROM `mail.redreader.in`), DMARC `p=none` with reports to `dmarc@`, least-privilege SMTP user `redreader-ses-smtp` (send only from `@redreader.in`) whose credentials are in the server `.env`, and a production-access request submitted (pending AWS review; until approved, SES only sends to verified addresses). Later: move DMARC to `p=quarantine` after about two weeks of clean reports.
+- [x] ~~**P0 — Production email via Amazon SES**~~ (Sydney). Done 2026-11-27: domain identity `redreader.in` verified (Easy DKIM 2048-bit, custom MAIL FROM `mail.redreader.in`), DMARC `p=none` with reports to `dmarc@`, least-privilege SMTP user `redreader-ses-smtp` (send only from `@redreader.in`) whose credentials are in the server `.env`, and production access granted 2026-11-27 (50,000 emails a day, 14 a second). Later: move DMARC to `p=quarantine` after about two weeks of clean reports.
 - [ ] **P1 — Register the WhatsApp templates with Meta** (`event_reminder`, `weekly_schedule_nudge`) and set `WHATSAPP_TOKEN` and `WHATSAPP_PHONE_NUMBER_ID`. Until then, messages are only logged.
 
 ## Legal and compliance
@@ -53,6 +53,7 @@
 ## Catalogue quality
 
 - [ ] **P1 — Admin tool to merge duplicate books and hide junk entries.** Searches and imports save every Open Library and Google Books result, including duplicate editions and study guides.
+- [ ] **P2 — Stronger Zoho DKIM key.** Zoho's selector `zmail` uses a 1024-bit key; add a 2048-bit selector and retire `zmail` once it verifies.
 - [ ] **P2 — Re-run book enrichment** (`pnpm --filter @bnw/api books:enrich`) after big imports, or schedule it.
 
 ## Nice to have before launch
