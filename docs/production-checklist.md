@@ -39,7 +39,7 @@
 
 ## Messaging
 
-- [ ] **P0 — Production email via Amazon SES** (Sydney): verify `redreader.in` (DKIM records in Cloudflare), add SPF and DMARC, request production access (SES starts in a sandbox that only sends to verified addresses), create SMTP credentials for `SMTP_URL`.
+- [ ] **P0 — Production email via Amazon SES** (Sydney). Needed for the welcome email (from `red@`) and notifications. Zoho must have a `red@` alias so replies to Red arrive: verify `redreader.in` (DKIM records in Cloudflare), add SPF and DMARC, request production access (SES starts in a sandbox that only sends to verified addresses), create SMTP credentials for `SMTP_URL`.
 - [ ] **P1 — Register the WhatsApp templates with Meta** (`event_reminder`, `weekly_schedule_nudge`) and set `WHATSAPP_TOKEN` and `WHATSAPP_PHONE_NUMBER_ID`. Until then, messages are only logged.
 
 ## Legal and compliance

@@ -6,13 +6,19 @@ import { AppError, notFound } from '../common/errors';
 import { AuthUser, CurrentUser, Public, ZBody } from '../common/http';
 import { devLoginEnabled, env, googleConfigured } from '../config/env';
 import { PrismaService } from '../core/prisma.service';
+import { QueueService } from '../core/queue.service';
 import { RedisService } from '../core/redis.service';
 import { GoogleAuthService } from './google.service';
 import { SessionService } from './session.service';
 
 @Injectable()
 export class AccountService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger('Account');
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly queues: QueueService,
+  ) {}
 
   /**
    * Find the user by provider id (Google `sub`, not email — email can change), or create one.
@@ -40,7 +46,7 @@ export class AccountService {
       return existing;
     }
 
-    return this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         email: profile.email,
         displayName: profile.name.slice(0, 60),
@@ -50,6 +56,11 @@ export class AccountService {
         settings: { create: {} },
       },
     });
+    // Welcome email from Red, sent by the worker. The job id makes it once per account.
+    await this.queues
+      .add('deliver', 'welcome', { userId: user.id }, { jobId: `welcome-${user.id}` })
+      .catch((e) => this.logger.warn(`Could not queue welcome email for ${user.id}: ${(e as Error).message}`));
+    return user;
   }
 }
 

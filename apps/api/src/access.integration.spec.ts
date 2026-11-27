@@ -36,6 +36,7 @@ import { OpsService } from './ops/ops.module';
 import { RecommendationsModule } from './recommendations/recommendations.module';
 import { RecommendationsService } from './recommendations/recommendations.service';
 import { NotificationsService } from './core/notifications.service';
+import { QueueService } from './core/queue.service';
 
 @Module({ imports: [CoreModule, AuthModule, BooksModule, ClubsModule, DiscussionModule, DmsModule, BlogModule, OpsModule, RecommendationsModule] })
 class TestModule {}
@@ -401,6 +402,21 @@ describe('authorization (integration)', () => {
       await app.get(NotificationsService).cleanup();
       const left = await prisma.notification.findMany({ where: { id: { in: [stale.id, oldUnread.id, fresh.id] } } });
       expect(left.map((n) => n.id).sort()).toEqual([oldUnread.id, fresh.id].sort());
+    });
+  });
+
+  describe('welcome email', () => {
+    it('queues one welcome email for a new account, none for a returning one', async () => {
+      const accounts = app.get(AccountService);
+      const deliver = app.get(QueueService).queue('deliver');
+      const user = await accounts.findOrCreate('google', 'sub-welcome-1', { email: 'welcome@test.local', name: 'Welcome Tester', picture: null });
+      const job = await deliver.getJob(`welcome-${user.id}`);
+      expect(job?.name).toBe('welcome');
+      expect(job?.data).toEqual({ userId: user.id });
+
+      await accounts.findOrCreate('google', 'sub-welcome-1', { email: 'welcome@test.local', name: 'Welcome Tester', picture: null });
+      const jobs = (await deliver.getJobs(['waiting', 'delayed', 'active', 'completed'])).filter((j) => j.name === 'welcome' && j.data.userId === user.id);
+      expect(jobs).toHaveLength(1);
     });
   });
 });

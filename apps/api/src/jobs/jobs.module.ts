@@ -7,6 +7,8 @@ import { ClubsModule } from '../clubs/clubs.module';
 import { ClubsService } from '../clubs/clubs.service';
 import { MailerService, WhatsAppService } from '../core/messaging.service';
 import { DeliverJob, NotificationsService } from '../core/notifications.service';
+import { env } from '../config/env';
+import { welcomeEmail } from '../emails/welcome';
 import { PrismaService } from '../core/prisma.service';
 import { bullConnection, QueueName, QueueService } from '../core/queue.service';
 import { SearchService } from '../core/search.service';
@@ -44,7 +46,7 @@ export class JobsRunner implements OnModuleInit, OnModuleDestroy {
   async onModuleInit() {
     const handlers: Record<QueueName, (job: Job) => Promise<unknown>> = {
       imports: (job) => this.imports.process(job.data as ImportJobData),
-      deliver: (job) => this.deliver(job.data as DeliverJob),
+      deliver: (job) => (job.name === 'welcome' ? this.welcome(job.data.userId as string) : this.deliver(job.data as DeliverJob)),
       search: (job) =>
         job.name === 'club'
           ? this.search.indexClub(job.data.id)
@@ -86,6 +88,14 @@ export class JobsRunner implements OnModuleInit, OnModuleDestroy {
     if (name === 'schedule-nudges') return this.clubs.sendScheduleNudges();
     if (name === 'media-cleanup') return this.media.cleanupUnattached();
     if (name === 'notifications-cleanup') return this.notifications.cleanup();
+  }
+
+  /** One-time welcome from Red. Skipped if the account is gone or email is turned off. */
+  private async welcome(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { settings: true } });
+    if (!user || user.deletedAt || user.settings?.notifyEmail === false) return;
+    const email = welcomeEmail({ firstName: user.displayName.split(' ')[0], origin: env().WEB_ORIGIN });
+    await this.mailer.sendDesigned({ to: user.email, from: env().MAIL_FROM_RED, ...email });
   }
 
   private async deliver(job: DeliverJob) {

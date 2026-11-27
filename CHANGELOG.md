@@ -13,6 +13,17 @@ Format:
 
 ---
 
+## 2026-11-27 — Welcome email from Red
+
+**Docs:** production-checklist
+**Change:**
+- A one-time welcome email goes out when someone first signs in. It's sent from **"Red from RedReader" `<red@redreader.in>`** (setting `MAIL_FROM_RED`), and replies go to the same address.
+- The email has Red's face (a hosted PNG at `/email/red-face.png`, because many email apps block SVG), a personal greeting, a button to the quiz, three next steps (quiz, clubs, Goodreads import), a note for organizers, and a text version.
+- The background worker sends it (`deliver/welcome` job, once per account). It's skipped if the account was deleted or email is turned off.
+- In development it lands in Mailpit; in production it's sent once SES is set up.
+
+**Why:** Greet new readers personally in Red's voice, and point them at the first step.
+
 ## 2026-11-25 — Production setup: Lightsail in Sydney
 
 **Docs:** deployment (new), production-checklist, architecture (§9 deviation), README

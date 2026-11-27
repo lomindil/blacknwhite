@@ -24,6 +24,8 @@ const schema = z.object({
   MEILI_KEY: optional,
   SMTP_URL: optional,
   MAIL_FROM: z.string().default('RedReader <hello@redreader.in>'),
+  /** Sender (and reply-to) for messages written in Red's voice, like the welcome email. */
+  MAIL_FROM_RED: z.string().default('Red from RedReader <red@redreader.in>'),
   WEB_ORIGIN: z.string().default('http://localhost:3000'),
   GOOGLE_CLIENT_ID: optional,
   GOOGLE_CLIENT_SECRET: optional,

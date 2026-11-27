@@ -2,6 +2,7 @@ import { isbn13to10, normalizeIsbn } from './books/book-factory';
 import { buildSchedule, weekThreadTitle } from './clubs/schedule';
 import { detectSource, mapRow } from './imports/imports.service';
 import { parseEnv, productionWarnings } from './config/env';
+import { welcomeEmail } from './emails/welcome';
 
 describe('schedule', () => {
   it('splits chapters into weeks, last week shorter', () => {
@@ -87,5 +88,22 @@ describe('deployment environment (APP_ENV)', () => {
     expect(() => parseEnv({ ...prod, DEV_LOGIN: 'true' })).toThrow(/DEV_LOGIN/);
     expect(() => parseEnv({ ...prod, NODE_ENV: 'development' })).toThrow(/NODE_ENV=production/);
     expect(() => parseEnv({ ...prod, OPS_PASSWORD: undefined })).toThrow(/OPS_PASSWORD/);
+  });
+});
+
+describe('welcome email', () => {
+  it('is personal, links to the site and has a text version', () => {
+    const e = welcomeEmail({ firstName: 'Nisha', origin: 'https://redreader.in' });
+    expect(e.subject).toBe('Welcome to RedReader, Nisha!');
+    expect(e.html).toContain('Hi Nisha, I&rsquo;m Red!');
+    expect(e.html).toContain('https://redreader.in/email/red-face.png');
+    expect(e.html).toContain('https://redreader.in/discover/quiz');
+    expect(e.text).toContain("Hi Nisha, I'm Red!");
+  });
+
+  it('escapes names so they cannot inject markup', () => {
+    const e = welcomeEmail({ firstName: '<img src=x onerror=alert(1)>', origin: 'https://redreader.in' });
+    expect(e.html).not.toContain('<img src=x');
+    expect(e.html).toContain('&lt;img src=x onerror=alert(1)&gt;');
   });
 });

@@ -8,6 +8,16 @@ export class MailerService {
   private readonly logger = new Logger('Mailer');
   private readonly transport: Transporter | null = env().SMTP_URL ? nodemailer.createTransport(env().SMTP_URL) : null;
 
+  /** A fully designed email (see src/emails). Replies go to the sender unless replyTo is given. */
+  async sendDesigned(msg: { to: string; from?: string; replyTo?: string; subject: string; html: string; text: string }) {
+    if (!this.transport) {
+      this.logger.log(`[email to ${msg.to} from ${msg.from ?? env().MAIL_FROM}] ${msg.subject}\n${msg.text}`);
+      return;
+    }
+    const from = msg.from ?? env().MAIL_FROM;
+    await this.transport.sendMail({ from, replyTo: msg.replyTo ?? from, to: msg.to, subject: msg.subject, html: msg.html, text: msg.text });
+  }
+
   async send(to: string, subject: string, text: string, link?: string) {
     if (!this.transport) {
       this.logger.log(`[email to ${to}] ${subject}\n${text}`);
