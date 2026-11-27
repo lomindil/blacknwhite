@@ -10,3 +10,7 @@ coverage/
 apps/api/uploads/
 *.tsbuildinfo
 .run/
+
+# Production secrets kept on this machine for setting up the server (never commit)
+deploy/certs/
+deploy/backup.env
