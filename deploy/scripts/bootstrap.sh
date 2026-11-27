@@ -35,6 +35,10 @@ if [ ! -f /swapfile ]; then
   echo 'vm.swappiness=10' | sudo tee /etc/sysctl.d/99-swappiness.conf >/dev/null && sudo sysctl -p /etc/sysctl.d/99-swappiness.conf
 fi
 
+echo "==> SSH: keys only, no root login"
+echo -e "PasswordAuthentication no\nPermitRootLogin no" | sudo tee /etc/ssh/sshd_config.d/60-redreader.conf >/dev/null
+sudo systemctl reload ssh
+
 echo "==> Automatic security updates"
 sudo dpkg-reconfigure -f noninteractive unattended-upgrades
 
@@ -52,6 +56,7 @@ if [ ! -f "$APP/.env" ]; then
 fi
 
 echo "==> Nightly backup at 02:30 IST (21:00 UTC)"
-( crontab -l 2>/dev/null | grep -v redreader-backup ; echo "0 21 * * * $APP/scripts/backup.sh >> $APP/backups/backup.log 2>&1 # redreader-backup" ) | crontab -
+# (A fresh server has no crontab yet: "crontab -l" fails, which must not stop the script.)
+{ crontab -l 2>/dev/null | grep -v redreader-backup || true; echo "0 21 * * * $APP/scripts/backup.sh >> $APP/backups/backup.log 2>&1 # redreader-backup"; } | crontab -
 
 echo "Done. Log out and back in once so the docker group applies."

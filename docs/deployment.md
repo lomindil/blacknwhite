@@ -40,6 +40,19 @@ Outside the server:
 - **GitHub Actions and the GitHub container registry:** builds and releases.
 - **Google Cloud:** the OAuth client for Google sign-in.
 
+## Production resources (AWS project 896305834989, `ap-southeast-2`)
+
+| Resource | Name | Notes |
+|---|---|---|
+| Lightsail instance | `redreader-prod` | Ubuntu 24.04, `medium_3_2` (4 GB, $24/mo), `ap-southeast-2a`; automatic snapshots daily 22:00 UTC (03:30 IST), last 7 kept |
+| Static IP | `redreader-prod-ip` | Attached to the instance. The address is deliberately not written in the repo; it's in the GitHub secret `DEPLOY_HOST` |
+| Firewall | — | 22 open (keys only, no root, fail2ban); 80/443 only from Cloudflare's IP ranges |
+| Bucket | `redreader-backups-896305834989` | Private, `small_1_0` ($1/mo, 5 GB); its own access key in `/srv/redreader/backup.env` |
+| SSH keys | `redreader-admin` (Lightsail key pair), `github-actions-deploy@redreader` | Private keys in `~/.ssh/` on the owner's machine: `redreader-admin.pem`, `redreader-deploy`. Verified host key in `~/.ssh/redreader_known_hosts` |
+| DNS | Cloudflare zone `redreader.in` | `A @` and `CNAME www`, both proxied |
+
+The project is on the AWS **Free plan** until it's upgraded; see the checklist item about upgrading before the credits run out.
+
 ## Releasing
 
 Day-to-day work happens on `main`; CI runs on every push. Production changes only when you release:
